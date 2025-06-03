@@ -14,10 +14,12 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     ViteImagemin({
-      gifsicle: { optimizationLevel: 7 },
-      mozjpeg: { quality: 80 },
-      pngquant: { quality: [0.65, 0.8] },
-      webp: { quality: 75 },
+      plugins: {
+        gifsicle: { optimizationLevel: 7 },
+        mozjpeg: { quality: 80 },
+        pngquant: { quality: [0.65, 0.8] },
+        webp: { quality: 75 },
+      },
     }),
     visualizer({
       filename: "dist/stats.html",
