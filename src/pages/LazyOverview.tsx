@@ -1,9 +1,8 @@
 
 import { lazyLoad } from '@/utils/lazyLoad';
+import { ComponentPlaygroundSkeleton } from '@/components/ui/skeleton-loaders';
 
-export const LazyOverview = lazyLoad(
-  () => import('./Overview'),
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-  </div>
+export default lazyLoad(
+  () => import('./Overview').then(module => ({ default: module.default })),
+  <ComponentPlaygroundSkeleton />
 );

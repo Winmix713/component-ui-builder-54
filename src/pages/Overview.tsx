@@ -1,107 +1,158 @@
 
-import React, { Suspense, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BundleAnalyzer } from '@/components/performance/BundleAnalyzer';
+import React, { useState, useEffect } from 'react';
 import { ComponentCard } from '@/components/overview/ComponentCard';
-import { SearchResultsSkeleton } from '@/components/ui/skeleton-loaders';
-import { EnhancedSearch } from '@/components/search/EnhancedSearch';
+import { StatsCard } from '@/components/overview/StatsCard';
+import { SearchInput } from '@/components/search/SearchInput';
+import { QuickActions } from '@/components/search/QuickActions';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { usePageAnalytics } from '@/hooks/usePageAnalytics';
 import { usePerformanceMonitor } from '@/hooks/usePerformance';
 
-const LazyStatsCard = React.lazy(() => import('@/components/overview/StatsCard').then(module => ({ default: module.StatsCard })));
+interface Component {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  complexity: 'Simple' | 'Medium' | 'Complex';
+  tags: string[];
+  usage: number;
+  lastUpdated: string;
+}
 
-export const Overview: React.FC = React.memo(() => {
+const mockComponents: Component[] = [
+  {
+    id: 'button',
+    name: 'Button',
+    description: 'Interactive button component with multiple variants',
+    category: 'Form Controls',
+    complexity: 'Simple',
+    tags: ['interactive', 'form', 'basic'],
+    usage: 98,
+    lastUpdated: '2024-01-15'
+  },
+  {
+    id: 'card',
+    name: 'Card',
+    description: 'Flexible content container with header, body, and footer',
+    category: 'Layout',
+    complexity: 'Medium',
+    tags: ['container', 'layout', 'content'],
+    usage: 87,
+    lastUpdated: '2024-01-12'
+  },
+  {
+    id: 'dialog',
+    name: 'Dialog',
+    description: 'Modal dialog for user interactions and confirmations',
+    category: 'Overlays',
+    complexity: 'Complex',
+    tags: ['modal', 'overlay', 'interaction'],
+    usage: 76,
+    lastUpdated: '2024-01-10'
+  }
+];
+
+const Overview: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredComponents, setFilteredComponents] = useState(mockComponents);
+  
+  usePageAnalytics('Overview');
   usePerformanceMonitor('Overview');
 
-  const featuredComponents = useMemo(() => [
-    { name: 'Button', description: 'Interactive button component', href: '/components/button' },
-    { name: 'Card', description: 'Flexible content container', href: '/components/card' },
-    { name: 'Input', description: 'Form input element', href: '/components/input' },
-    { name: 'Checkbox', description: 'Checkbox input control', href: '/components/checkbox' }
-  ], []);
+  useEffect(() => {
+    if (!searchTerm) {
+      setFilteredComponents(mockComponents);
+      return;
+    }
 
-  const quickStats = useMemo(() => ({
-    totalComponents: 45,
-    categories: 8,
-    variations: 120,
-    lastUpdated: new Date().toLocaleDateString()
-  }), []);
+    const filtered = mockComponents.filter(component =>
+      component.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      component.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      component.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    
+    setFilteredComponents(filtered);
+  }, [searchTerm]);
+
+  const stats = {
+    totalComponents: mockComponents.length,
+    categories: [...new Set(mockComponents.map(c => c.category))].length,
+    averageUsage: Math.round(mockComponents.reduce((acc, c) => acc + c.usage, 0) / mockComponents.length),
+    lastUpdated: mockComponents.reduce((latest, c) => 
+      new Date(c.lastUpdated) > new Date(latest) ? c.lastUpdated : latest, 
+      mockComponents[0].lastUpdated
+    )
+  };
 
   return (
-    <div className="space-y-6" role="main" aria-label="Component Library Overview">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight">Component Library</h1>
-        <p className="text-muted-foreground mt-2">
-          A comprehensive collection of accessible, customizable UI components built with React and Tailwind CSS.
-        </p>
-      </header>
+    <ErrorBoundary>
+      <div className="space-y-6">
+        <div className="flex flex-col space-y-4">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">Component Library</h1>
+            <p className="text-muted-foreground mt-2">
+              Explore and test our collection of reusable UI components
+            </p>
+          </div>
+          
+          <SearchInput 
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search components..."
+          />
+          
+          <QuickActions />
+        </div>
 
-      <Tabs defaultValue="components" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="components">Components</TabsTrigger>
-          <TabsTrigger value="search">Search</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="stats">Statistics</TabsTrigger>
-        </TabsList>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatsCard
+            title="Total Components"
+            value={stats.totalComponents}
+            description="Available in library"
+            trend="stable"
+          />
+          <StatsCard
+            title="Categories"
+            value={stats.categories}
+            description="Component groups"
+            trend="stable"
+          />
+          <StatsCard
+            title="Avg Usage"
+            value={`${stats.averageUsage}%`}
+            description="Adoption rate"
+            trend="up"
+          />
+          <StatsCard
+            title="Last Updated"
+            value={new Date(stats.lastUpdated).toLocaleDateString()}
+            description="Most recent change"
+            trend="stable"
+          />
+        </div>
 
-        <TabsContent value="components" className="space-y-6">
-          <section aria-label="Featured components">
-            <h2 className="text-2xl font-semibold mb-4">Featured Components</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {featuredComponents.map((component) => (
-                <ComponentCard key={component.name} {...component} />
-              ))}
-            </div>
-          </section>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredComponents.map((component) => (
+            <ComponentCard key={component.id} component={component} />
+          ))}
+        </div>
 
-          <section aria-label="Quick statistics">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="pt-6 text-center">
-                  <div className="text-2xl font-bold">{quickStats.totalComponents}</div>
-                  <p className="text-sm text-muted-foreground">Components</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6 text-center">
-                  <div className="text-2xl font-bold">{quickStats.categories}</div>
-                  <p className="text-sm text-muted-foreground">Categories</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6 text-center">
-                  <div className="text-2xl font-bold">{quickStats.variations}</div>
-                  <p className="text-sm text-muted-foreground">Variations</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6 text-center">
-                  <div className="text-2xl font-bold">100%</div>
-                  <p className="text-sm text-muted-foreground">Accessible</p>
-                </CardContent>
-              </Card>
-            </div>
-          </section>
-        </TabsContent>
-
-        <TabsContent value="search" className="space-y-6">
-          <EnhancedSearch />
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-6">
-          <BundleAnalyzer />
-        </TabsContent>
-
-        <TabsContent value="stats" className="space-y-6">
-          <Suspense fallback={<SearchResultsSkeleton />}>
-            <LazyStatsCard stats={quickStats} />
-          </Suspense>
-        </TabsContent>
-      </Tabs>
-    </div>
+        {filteredComponents.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground text-lg">
+              No components found matching "{searchTerm}"
+            </p>
+            <button 
+              onClick={() => setSearchTerm('')}
+              className="mt-4 text-primary hover:underline"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
+      </div>
+    </ErrorBoundary>
   );
-});
+};
 
-Overview.displayName = 'Overview';
+export default Overview;
