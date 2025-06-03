@@ -81,7 +81,11 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
     } catch (error) {
       const err = error as Error;
       setError(err);
-      onError?.(err);
+
+      // Schedule error callback for next tick to avoid setState during render
+      setTimeout(() => {
+        onError?.(err);
+      }, 0);
 
       return (
         <Alert variant="destructive">
