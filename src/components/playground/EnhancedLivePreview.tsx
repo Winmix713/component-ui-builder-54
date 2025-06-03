@@ -1,57 +1,35 @@
 
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, Eye, EyeOff, RefreshCw, Zap } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface EnhancedLivePreviewProps {
   code: string;
   componentType: string;
-  onRenderError?: (error: Error) => void;
-}
-
-interface PreviewSettings {
-  showGrid: boolean;
-  darkMode: boolean;
-  centerContent: boolean;
-  showBounds: boolean;
+  props?: Record<string, any>;
+  onError?: (error: Error) => void;
 }
 
 export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.memo(({ 
   code, 
   componentType,
-  onRenderError 
+  props = {},
+  onError 
 }) => {
   const [error, setError] = useState<Error | null>(null);
   const [renderCount, setRenderCount] = useState(0);
-  const [lastRenderTime, setLastRenderTime] = useState<number>(0);
-  const [settings, setSettings] = useState<PreviewSettings>({
-    showGrid: false,
-    darkMode: false,
-    centerContent: true,
-    showBounds: false
-  });
 
-  // Memoized error callback to prevent re-renders
   const handleRenderError = useCallback((error: Error) => {
     setError(error);
-    // Use setTimeout to avoid setState during render
-    setTimeout(() => {
-      onRenderError?.(error);
-    }, 0);
-  }, [onRenderError]);
+    onError?.(error);
+  }, [onError]);
 
   const renderedComponent = useMemo(() => {
-    const startTime = performance.now();
-
     try {
       setError(null);
 
@@ -84,11 +62,9 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
         Checkbox
       );
 
-      const endTime = performance.now();
-      setLastRenderTime(endTime - startTime);
       setRenderCount(prev => prev + 1);
 
-      return <ComponentDemo />;
+      return <ComponentDemo {...props} />;
     } catch (error) {
       const err = error as Error;
       handleRenderError(err);
@@ -107,134 +83,44 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
         </Alert>
       );
     }
-  }, [code, handleRenderError]);
+  }, [code, props, handleRenderError]);
 
   const handleRefresh = useCallback(() => {
     setRenderCount(0);
     setError(null);
-    setLastRenderTime(0);
   }, []);
-
-  const handleSettingChange = useCallback((key: keyof PreviewSettings, value: boolean) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
-  }, []);
-
-  const getGridBackground = useCallback(() => {
-    if (!settings.showGrid) return '';
-    return 'bg-[radial-gradient(circle,_#e5e7eb_1px,_transparent_1px)] [background-size:16px_16px]';
-  }, [settings.showGrid]);
-
-  const getPreviewClasses = useMemo(() => {
-    const baseClasses = [
-      'p-8 border rounded-md min-h-[200px] transition-all duration-300',
-      settings.centerContent ? 'flex items-center justify-center' : 'flex',
-      settings.showBounds ? 'border-2 border-dashed border-blue-500' : '',
-      settings.darkMode ? 'bg-slate-900 text-white' : 'bg-muted/20 backdrop-blur-sm',
-      getGridBackground()
-    ];
-
-    return baseClasses.filter(Boolean).join(' ');
-  }, [settings, getGridBackground]);
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="preview" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="preview">Live Preview</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">
+            {componentType}
+          </Badge>
+          {error && (
+            <Badge variant="destructive" className="text-xs">
+              Error
+            </Badge>
+          )}
+          {!error && (
+            <Badge variant="secondary" className="text-xs">
+              Rendered {renderCount}x
+            </Badge>
+          )}
+        </div>
 
-        <TabsContent value="preview" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
-                {componentType}
-              </Badge>
-              {error && (
-                <Badge variant="destructive" className="text-xs">
-                  Error
-                </Badge>
-              )}
-              {!error && (
-                <Badge variant="secondary" className="text-xs">
-                  Rendered {renderCount}x
-                </Badge>
-              )}
-            </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+      </div>
 
-            <div className="flex items-center gap-2">
-              {lastRenderTime > 0 && (
-                <Badge variant="outline" className="text-xs">
-                  <Zap className="h-3 w-3 mr-1" />
-                  {lastRenderTime.toFixed(2)}ms
-                </Badge>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-                className="glass-card"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div className={getPreviewClasses}>
-            {renderedComponent}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="settings" className="space-y-4">
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle className="text-sm">Preview Settings</CardTitle>
-              <CardDescription className="text-xs">
-                Customize the preview environment
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="centerContent"
-                    checked={settings.centerContent}
-                    onCheckedChange={(value) => handleSettingChange('centerContent', value)}
-                  />
-                  <Label htmlFor="centerContent" className="text-sm">Center Content</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="showGrid"
-                    checked={settings.showGrid}
-                    onCheckedChange={(value) => handleSettingChange('showGrid', value)}
-                  />
-                  <Label htmlFor="showGrid" className="text-sm">Show Grid</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="darkMode"
-                    checked={settings.darkMode}
-                    onCheckedChange={(value) => handleSettingChange('darkMode', value)}
-                  />
-                  <Label htmlFor="darkMode" className="text-sm">Dark Mode</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="showBounds"
-                    checked={settings.showBounds}
-                    onCheckedChange={(value) => handleSettingChange('showBounds', value)}
-                  />
-                  <Label htmlFor="showBounds" className="text-sm">Show Bounds</Label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <div className="p-8 border rounded-md bg-muted/20 backdrop-blur-sm flex items-center justify-center min-h-[200px]">
+        {renderedComponent}
+      </div>
     </div>
   );
 });

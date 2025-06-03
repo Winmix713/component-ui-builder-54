@@ -33,13 +33,13 @@ const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <TooltipProvider>
-        <KeyboardNavigationProvider>
-          <AccessibilityProvider>
+        <AccessibilityProvider>
+          <KeyboardNavigationProvider>
             <AnalyticsProvider>
               {children}
             </AnalyticsProvider>
-          </AccessibilityProvider>
-        </KeyboardNavigationProvider>
+          </KeyboardNavigationProvider>
+        </AccessibilityProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

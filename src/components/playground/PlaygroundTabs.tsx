@@ -1,18 +1,9 @@
-import React, { useCallback } from 'react';
+
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LazyCodeEditor } from './LazyCodeEditor';
-import { EnhancedLivePreview } from './EnhancedLivePreview';
-import { AdvancedPropsConfigurator } from './AdvancedPropsConfigurator';
-import { EnhancedCodeEditor } from './EnhancedCodeEditor';
-import { ComponentVariations } from './ComponentVariations';
-import { CodeGenerator } from './CodeGenerator';
-import { CodeTemplatesLibrary } from './CodeTemplatesLibrary';
-import { ResponsivePreview } from './ResponsivePreview';
+import { LivePreview } from './LivePreview';
+import { CodeEditor } from './CodeEditor';
 import { ComponentErrorBoundary } from '@/components/error/ErrorBoundary';
-import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
-import { FocusManager } from '@/components/accessibility/FocusManager';
-import { PerformanceMonitor } from '@/components/performance/PerformanceMonitor';
-import { LoadingState, CodeEditorLoadingSkeleton, PreviewLoadingSkeleton, PropsConfiguratorLoadingSkeleton } from '@/components/loading/EnhancedLoadingStates';
 
 interface PlaygroundTabsProps {
   code: string;
@@ -27,233 +18,58 @@ interface PlaygroundTabsProps {
   onRenderError: (error: Error) => void;
   onFormat: () => void;
   onReset: () => void;
-  isLoading?: boolean;
+  isLoading: boolean;
 }
 
-export const PlaygroundTabs: React.FC<PlaygroundTabsProps> = React.memo(({
+export const PlaygroundTabs: React.FC<PlaygroundTabsProps> = ({
   code,
   componentType,
   props,
-  variations,
-  activeVariation,
   onCodeChange,
-  onPropsChange,
-  onVariationSelect,
-  onVariationRemove,
   onRenderError,
-  onFormat,
-  onReset,
-  isLoading = false
+  isLoading
 }) => {
-  const { announceToScreenReader } = useAccessibility();
-  const [activeTab, setActiveTab] = React.useState('preview');
-
-  const handleTabChange = useCallback((value: string) => {
-    setActiveTab(value);
-    const tabNames = {
-      preview: 'Live Preview',
-      code: 'Code Editor',
-      templates: 'Templates',
-      props: 'Properties Configurator',
-      variations: 'Component Variations',
-      responsive: 'Responsive Preview'
-    };
-    announceToScreenReader(`Switched to ${tabNames[value as keyof typeof tabNames]} tab`);
-  }, [announceToScreenReader]);
-
-  const handleKeyboardShortcuts = useCallback((e: React.KeyboardEvent) => {
-    if (e.ctrlKey || e.metaKey) {
-      switch (e.key) {
-        case '1':
-          e.preventDefault();
-          (document.querySelector('[data-tab="preview"]') as HTMLElement)?.click();
-          break;
-        case '2':
-          e.preventDefault();
-          (document.querySelector('[data-tab="code"]') as HTMLElement)?.click();
-          break;
-        case '3':
-          e.preventDefault();
-          (document.querySelector('[data-tab="templates"]') as HTMLElement)?.click();
-          break;
-        case '4':
-          e.preventDefault();
-          (document.querySelector('[data-tab="props"]') as HTMLElement)?.click();
-          break;
-        case '5':
-          e.preventDefault();
-          (document.querySelector('[data-tab="variations"]') as HTMLElement)?.click();
-          break;
-        case '6':
-          e.preventDefault();
-          (document.querySelector('[data-tab="responsive"]') as HTMLElement)?.click();
-          break;
-      }
+  const handleCodeChange = (value: string | undefined) => {
+    if (value !== undefined) {
+      onCodeChange(value);
     }
-  }, []);
-
-  const handleTemplateSelect = useCallback((template: any) => {
-    onCodeChange(template.code);
-    announceToScreenReader(`Applied ${template.name} template`);
-  }, [onCodeChange, announceToScreenReader]);
+  };
 
   if (isLoading) {
-    return <LoadingState variant="skeleton" message="Loading playground..." />;
+    return <div className="p-4 text-center">Loading...</div>;
   }
 
   return (
-    <FocusManager>
-      <div onKeyDown={handleKeyboardShortcuts} role="region" aria-label="Component playground tabs">
-        <Tabs defaultValue="preview" className="w-full" onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-6" role="tablist">
-            <TabsTrigger 
-              value="preview" 
-              data-tab="preview"
-              aria-label="Live Preview (Ctrl+1)"
-              title="Ctrl+1"
-            >
-              Preview
-            </TabsTrigger>
-            <TabsTrigger 
-              value="code" 
-              data-tab="code"
-              aria-label="Code Editor (Ctrl+2)"
-              title="Ctrl+2"
-            >
-              Code
-            </TabsTrigger>
-            <TabsTrigger 
-              value="templates" 
-              data-tab="templates"
-              aria-label="Templates (Ctrl+3)"
-              title="Ctrl+3"
-            >
-              Templates
-            </TabsTrigger>
-            <TabsTrigger 
-              value="props" 
-              data-tab="props"
-              aria-label="Properties (Ctrl+4)"
-              title="Ctrl+4"
-            >
-              Props
-            </TabsTrigger>
-            <TabsTrigger 
-              value="variations" 
-              data-tab="variations"
-              aria-label="Variations (Ctrl+5)"
-              title="Ctrl+5"
-            >
-              Variations
-            </TabsTrigger>
-            <TabsTrigger 
-              value="responsive" 
-              data-tab="responsive"
-              aria-label="Responsive (Ctrl+6)"
-              title="Ctrl+6"
-            >
-              Responsive
-            </TabsTrigger>
-          </TabsList>
+    <div role="region" aria-label="Component playground tabs">
+      <Tabs defaultValue="preview" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="preview" data-tab="preview">
+            Preview
+          </TabsTrigger>
+          <TabsTrigger value="code" data-tab="code">
+            Code
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="preview" role="tabpanel" aria-labelledby="tab-preview">
-            <ComponentErrorBoundary>
-              <div role="region" aria-label="Live component preview" aria-live="polite">
-                <React.Suspense fallback={<PreviewLoadingSkeleton />}>
-                  <EnhancedLivePreview
-                    code={code}
-                    componentType={componentType}
-                    onRenderError={onRenderError}
-                  />
-                </React.Suspense>
-              </div>
-            </ComponentErrorBoundary>
-          </TabsContent>
+        <TabsContent value="preview" role="tabpanel">
+          <ComponentErrorBoundary>
+            <LivePreview
+              code={code}
+              componentType={componentType}
+            />
+          </ComponentErrorBoundary>
+        </TabsContent>
 
-          <TabsContent value="code" role="tabpanel" aria-labelledby="tab-code">
-            <ComponentErrorBoundary>
-              <div role="region" aria-label="Code generator and export">
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  <div aria-label="Code editor">
-                    <React.Suspense fallback={<CodeEditorLoadingSkeleton />}>
-                      <EnhancedCodeEditor
-                        value={code}
-                        onChange={onCodeChange}
-                        height="500px"
-                        onFormat={onFormat}
-                        onReset={onReset}
-                      />
-                    </React.Suspense>
-                  </div>
-                  <div aria-label="Code generator and performance metrics" className="space-y-4">
-                    <CodeGenerator
-                      componentType={componentType}
-                      currentProps={props}
-                      currentCode={code}
-                    />
-                    <PerformanceMonitor componentName={componentType} />
-                  </div>
-                </div>
-              </div>
-            </ComponentErrorBoundary>
-          </TabsContent>
-
-          <TabsContent value="templates" role="tabpanel" aria-labelledby="tab-templates">
-            <ComponentErrorBoundary>
-              <div role="region" aria-label="Code templates library">
-                <CodeTemplatesLibrary onTemplateSelect={handleTemplateSelect} />
-              </div>
-            </ComponentErrorBoundary>
-          </TabsContent>
-
-          <TabsContent value="props" role="tabpanel" aria-labelledby="tab-props">
-            <ComponentErrorBoundary>
-              <div role="region" aria-label="Advanced component properties configurator">
-                <React.Suspense fallback={<PropsConfiguratorLoadingSkeleton />}>
-                  <AdvancedPropsConfigurator
-                    componentType={componentType}
-                    onPropsChange={onPropsChange}
-                    currentProps={props}
-                    onReset={() => onPropsChange({})}
-                  />
-                </React.Suspense>
-              </div>
-            </ComponentErrorBoundary>
-          </TabsContent>
-
-          <TabsContent value="variations" role="tabpanel" aria-labelledby="tab-variations">
-            <ComponentErrorBoundary>
-              <div role="region" aria-label="Component variations and presets">
-                <ComponentVariations
-                  variations={variations}
-                  activeVariation={activeVariation}
-                  onVariationSelect={onVariationSelect}
-                  onVariationRemove={onVariationRemove}
-                />
-              </div>
-            </ComponentErrorBoundary>
-          </TabsContent>
-
-          <TabsContent value="responsive" role="tabpanel" aria-labelledby="tab-responsive">
-            <ComponentErrorBoundary>
-              <div role="region" aria-label="Responsive preview across different screen sizes">
-                <React.Suspense fallback={<PreviewLoadingSkeleton />}>
-                  <ResponsivePreview
-                    code={code}
-                    componentType={componentType}
-                  />
-                </React.Suspense>
-              </div>
-            </ComponentErrorBoundary>
-          </TabsContent>
-        </Tabs>
-        
-        <div className="sr-only" aria-live="polite" id="keyboard-shortcuts-help">
-          Use Ctrl+1 through Ctrl+6 to quickly switch between tabs. Press ? for help.
-        </div>
-      </div>
-    </FocusManager>
+        <TabsContent value="code" role="tabpanel">
+          <ComponentErrorBoundary>
+            <CodeEditor
+              value={code}
+              onChange={handleCodeChange}
+              height="400px"
+            />
+          </ComponentErrorBoundary>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
-});
-
-PlaygroundTabs.displayName = 'PlaygroundTabs';
+};
