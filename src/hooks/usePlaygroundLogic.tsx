@@ -1,11 +1,10 @@
-import { useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePerformanceMonitor } from '@/hooks/usePerformance';
 import { useFocusManagement } from '@/hooks/useFocusManagement';
 import { useComponentVariations } from '@/hooks/useComponentVariations';
 import { usePlaygroundState } from '@/hooks/usePlaygroundState';
 import { usePlaygroundActions } from '@/hooks/usePlaygroundActions';
 import { usePlaygroundShortcuts } from '@/hooks/useKeyboardShortcuts';
-import React, { useState, useEffect, useCallback } from 'react';
 
 interface UsePlaygroundLogicProps {
   componentType: string;
