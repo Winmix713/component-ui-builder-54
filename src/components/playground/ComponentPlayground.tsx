@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { RotateCcw, Play, Zap, Star } from 'lucide-react';
 import { LazyCodeEditor } from './LazyCodeEditor';
 import { EnhancedLivePreview } from './EnhancedLivePreview';
 import { AdvancedPropsConfigurator } from './AdvancedPropsConfigurator';
@@ -11,15 +9,15 @@ import { EnhancedCodeEditor } from './EnhancedCodeEditor';
 import { ComponentVariations } from './ComponentVariations';
 import { CodeGenerator } from './CodeGenerator';
 import { ResponsivePreview } from './ResponsivePreview';
+import { PlaygroundHeader } from './PlaygroundHeader';
 import { ErrorBoundary, ComponentErrorBoundary } from '@/components/error/ErrorBoundary';
-import { EnhancedCopyButton } from '@/components/ui/enhanced-copy';
 import { ComponentPlaygroundSkeleton } from '@/components/ui/skeleton-loaders';
 import { usePlaygroundShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { usePerformanceMonitor } from '@/hooks/usePerformance';
 import { useFocusManagement } from '@/hooks/useFocusManagement';
-import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
 import { useComponentVariations } from '@/hooks/useComponentVariations';
-import { toast } from '@/hooks/use-toast';
+import { usePlaygroundState } from '@/hooks/usePlaygroundState';
+import { usePlaygroundActions } from '@/hooks/usePlaygroundActions';
 
 interface ComponentPlaygroundProps {
   componentType: string;
@@ -27,73 +25,26 @@ interface ComponentPlaygroundProps {
   title: string;
 }
 
-const generateCodeFromProps = (componentType: string, props: Record<string, any>, fallbackCode: string): string => {
-  switch (componentType) {
-    case 'button':
-      return `export function ComponentDemo() {
-  return (
-    <Button${props.variant !== 'default' ? ` variant="${props.variant}"` : ''}${props.size !== 'default' ? ` size="${props.size}"` : ''}${props.disabled ? ' disabled' : ''}>
-      ${props.children || 'Button'}
-    </Button>
-  )
-}`;
-    case 'card':
-      return `export function ComponentDemo() {
-  return (
-    <Card className="w-80">
-      <CardHeader>
-        <CardTitle>${props.title || 'Card Title'}</CardTitle>
-        <CardDescription>${props.description || 'Card Description'}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <p>${props.content || 'Card Content'}</p>
-      </CardContent>
-    </Card>
-  )
-}`;
-    case 'input':
-      return `export function ComponentDemo() {
-  return (
-    <Input${props.type !== 'text' ? ` type="${props.type}"` : ''}${props.placeholder ? ` placeholder="${props.placeholder}"` : ''}${props.disabled ? ' disabled' : ''} />
-  )
-}`;
-    case 'checkbox':
-      return `export function ComponentDemo() {
-  const [checked, setChecked] = useState(${props.checked || false});
-  
-  return (
-    <div className="flex items-center space-x-2">
-      <Checkbox 
-        id="demo"
-        checked={checked}
-        onCheckedChange={setChecked}${props.disabled ? '\n        disabled' : ''}
-      />
-      <label htmlFor="demo">${props.label || 'Accept terms and conditions'}</label>
-    </div>
-  )
-}`;
-    default:
-      return fallbackCode;
-  }
-};
-
 export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
   componentType,
   initialCode,
   title
 }) => {
   usePerformanceMonitor('ComponentPlayground');
-  const { announceToScreenReader } = useAccessibility();
   const { containerRef } = useFocusManagement({ autoFocus: false });
   
-  const [code, setCode] = useState(initialCode);
-  const [props, setProps] = useState<Record<string, any>>({});
-  const [isRunning, setIsRunning] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [renderErrors, setRenderErrors] = useState<Error[]>([]);
-  const [lastExecutionTime, setLastExecutionTime] = useState<number>(0);
+  const {
+    state,
+    updateCode,
+    updateProps,
+    setRunning,
+    setLoading,
+    addRenderError,
+    clearRenderErrors,
+    setExecutionTime,
+    reset
+  } = usePlaygroundState(initialCode);
 
-  // Component variations hook
   const {
     variations,
     activeVariation,
@@ -102,89 +53,42 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
     removeVariation
   } = useComponentVariations(componentType);
 
-  const handleCodeChange = (newCode: string | undefined) => {
-    if (newCode !== undefined) {
-      setCode(newCode);
-      announceToScreenReader('Code updated');
-    }
-  };
-
-  const handlePropsChange = (newProps: Record<string, any>) => {
-    setProps(newProps);
-    const generatedCode = generateCodeFromProps(componentType, newProps, initialCode);
-    setCode(generatedCode);
-    announceToScreenReader('Component props updated');
-  };
-
-  const handleReset = () => {
-    setCode(initialCode);
-    setProps({});
-    setRenderErrors([]);
-    announceToScreenReader('Playground reset to initial state');
-    toast({
-      title: "Reset successful",
-      description: "Playground has been reset to initial state",
-    });
-  };
-
-  const handleRun = () => {
-    const startTime = performance.now();
-    setIsRunning(true);
-    setRenderErrors([]);
-    announceToScreenReader('Running component code');
-    
-    setTimeout(() => {
-      const endTime = performance.now();
-      setLastExecutionTime(endTime - startTime);
-      setIsRunning(false);
-      announceToScreenReader('Component code execution completed');
-    }, 500);
-  };
-
-  const handleCopy = () => {
-    announceToScreenReader('Code copied to clipboard');
-  };
+  const {
+    handleCodeChange,
+    handlePropsChange,
+    handleReset,
+    handleRun,
+    handleCopy,
+    handleSaveAsVariation,
+    handleVariationSelect
+  } = usePlaygroundActions({
+    componentType,
+    initialCode,
+    state,
+    updateCode,
+    updateProps,
+    setRunning,
+    clearRenderErrors,
+    setExecutionTime,
+    addCustomVariation,
+    reset
+  });
 
   const handleRenderError = (error: Error) => {
-    setRenderErrors(prev => [...prev, error]);
+    addRenderError(error);
   };
 
   const handleFormat = () => {
-    // Simple code formatting (in a real implementation, you'd use a proper formatter)
-    const formatted = code
+    const formatted = state.code
       .split('\n')
       .map(line => line.trim())
       .join('\n');
-    setCode(formatted);
-    announceToScreenReader('Code formatted');
+    updateCode(formatted);
   };
 
-  const handleVariationSelect = (variation: any) => {
-    setProps(variation.props);
+  const handleVariationSelectWithActiveState = (variation: any) => {
     setActiveVariation(variation.id);
-    const generatedCode = generateCodeFromProps(componentType, variation.props, initialCode);
-    setCode(generatedCode);
-    announceToScreenReader(`Applied ${variation.name} variation`);
-    toast({
-      title: "Variation applied",
-      description: `${variation.name} variation has been applied`,
-    });
-  };
-
-  const handleSaveAsVariation = () => {
-    const name = prompt('Enter variation name:');
-    if (name) {
-      addCustomVariation({
-        name,
-        description: `Custom ${name} variation`,
-        props,
-        category: 'custom'
-      });
-      toast({
-        title: "Variation saved",
-        description: `${name} variation has been saved`,
-      });
-    }
+    handleVariationSelect(variation);
   };
 
   // Set up keyboard shortcuts
@@ -194,7 +98,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
     onReset: handleReset,
   });
 
-  if (isLoading) {
+  if (state.isLoading) {
     return <ComponentPlaygroundSkeleton />;
   }
 
@@ -206,69 +110,17 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
         role="region"
         aria-label={`Interactive playground for ${title} component`}
       >
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <CardTitle className="text-lg" id="playground-title">
-                Enhanced Playground
-              </CardTitle>
-              <Badge variant="secondary" className="glass-card" aria-describedby="playground-title">
-                {title}
-              </Badge>
-              {renderErrors.length > 0 && (
-                <Badge variant="destructive" className="text-xs">
-                  {renderErrors.length} Error{renderErrors.length > 1 ? 's' : ''}
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center space-x-2" role="toolbar" aria-label="Playground actions">
-              {lastExecutionTime > 0 && (
-                <Badge variant="outline" className="text-xs">
-                  <Zap className="h-3 w-3 mr-1" />
-                  {lastExecutionTime.toFixed(2)}ms
-                </Badge>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSaveAsVariation}
-                className="glass-card"
-                aria-label="Save current configuration as variation"
-              >
-                <Star className="h-4 w-4 mr-2" aria-hidden="true" />
-                Save
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRun}
-                disabled={isRunning}
-                className="glass-card"
-                aria-label={isRunning ? 'Code is running' : 'Run component code'}
-              >
-                <Play className="h-4 w-4 mr-2" aria-hidden="true" />
-                {isRunning ? 'Running...' : 'Run'}
-              </Button>
-              <EnhancedCopyButton
-                code={code}
-                language="tsx"
-                className="glass-card"
-                onCopy={handleCopy}
-                aria-label="Copy code to clipboard"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReset}
-                className="glass-card"
-                aria-label="Reset playground to initial state"
-              >
-                <RotateCcw className="h-4 w-4" aria-hidden="true" />
-                <span className="sr-only">Reset</span>
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
+        <PlaygroundHeader
+          title={title}
+          renderErrorsCount={state.renderErrors.length}
+          isRunning={state.isRunning}
+          lastExecutionTime={state.lastExecutionTime}
+          code={state.code}
+          onRun={handleRun}
+          onReset={handleReset}
+          onSaveAsVariation={handleSaveAsVariation}
+          onCopy={handleCopy}
+        />
         <CardContent>
           <Tabs defaultValue="playground" className="w-full">
             <TabsList className="grid w-full grid-cols-5" role="tablist">
@@ -288,7 +140,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
                   <ComponentErrorBoundary>
                     <div role="region" aria-labelledby="code-editor-label">
                       <LazyCodeEditor
-                        value={code}
+                        value={state.code}
                         onChange={handleCodeChange}
                         height="400px"
                       />
@@ -302,7 +154,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
                   <ComponentErrorBoundary>
                     <div role="region" aria-labelledby="live-preview-label">
                       <EnhancedLivePreview 
-                        code={code} 
+                        code={state.code} 
                         componentType={componentType}
                         onError={handleRenderError}
                       />
@@ -318,7 +170,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
                   <ComponentVariations
                     variations={variations}
                     activeVariation={activeVariation}
-                    onVariationSelect={handleVariationSelect}
+                    onVariationSelect={handleVariationSelectWithActiveState}
                     onVariationRemove={removeVariation}
                   />
                 </div>
@@ -330,7 +182,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
                 <div role="region" aria-label="Responsive preview">
                   <ResponsivePreview componentType={componentType}>
                     <EnhancedLivePreview 
-                      code={code} 
+                      code={state.code} 
                       componentType={componentType}
                       onError={handleRenderError}
                     />
@@ -344,7 +196,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
                 <div role="region" aria-label="Code generator and export">
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                     <EnhancedCodeEditor
-                      value={code}
+                      value={state.code}
                       onChange={handleCodeChange}
                       height="500px"
                       onFormat={handleFormat}
@@ -352,8 +204,8 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
                     />
                     <CodeGenerator
                       componentType={componentType}
-                      currentProps={props}
-                      currentCode={code}
+                      currentProps={state.props}
+                      currentCode={state.code}
                     />
                   </div>
                 </div>
@@ -366,8 +218,8 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
                   <AdvancedPropsConfigurator
                     componentType={componentType}
                     onPropsChange={handlePropsChange}
-                    currentProps={props}
-                    onReset={() => setProps({})}
+                    currentProps={state.props}
+                    onReset={() => updateProps({})}
                   />
                 </div>
               </ComponentErrorBoundary>
