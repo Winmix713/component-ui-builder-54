@@ -56,7 +56,7 @@ const Overview: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredComponents, setFilteredComponents] = useState(mockComponents);
   
-  usePageAnalytics('Overview');
+  usePageAnalytics();
   usePerformanceMonitor('Overview');
 
   useEffect(() => {
@@ -77,7 +77,7 @@ const Overview: React.FC = () => {
   const stats = {
     totalComponents: mockComponents.length,
     categories: [...new Set(mockComponents.map(c => c.category))].length,
-    averageUsage: Math.round(mockComponents.reduce((acc, c) => acc + c.usage, 0) / mockComponents.length),
+    variations: 24,
     lastUpdated: mockComponents.reduce((latest, c) => 
       new Date(c.lastUpdated) > new Date(latest) ? c.lastUpdated : latest, 
       mockComponents[0].lastUpdated
@@ -98,42 +98,24 @@ const Overview: React.FC = () => {
           <SearchInput 
             value={searchTerm}
             onChange={setSearchTerm}
-            placeholder="Search components..."
           />
           
-          <QuickActions />
+          <QuickActions 
+            result={null}
+            onNavigate={() => {}}
+          />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatsCard
-            title="Total Components"
-            value={stats.totalComponents}
-            description="Available in library"
-            trend="stable"
-          />
-          <StatsCard
-            title="Categories"
-            value={stats.categories}
-            description="Component groups"
-            trend="stable"
-          />
-          <StatsCard
-            title="Avg Usage"
-            value={`${stats.averageUsage}%`}
-            description="Adoption rate"
-            trend="up"
-          />
-          <StatsCard
-            title="Last Updated"
-            value={new Date(stats.lastUpdated).toLocaleDateString()}
-            description="Most recent change"
-            trend="stable"
-          />
-        </div>
+        <StatsCard stats={stats} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredComponents.map((component) => (
-            <ComponentCard key={component.id} component={component} />
+            <ComponentCard 
+              key={component.id} 
+              name={component.name}
+              description={component.description}
+              href={`/components/${component.id}`}
+            />
           ))}
         </div>
 

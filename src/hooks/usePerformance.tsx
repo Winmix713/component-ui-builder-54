@@ -37,8 +37,8 @@ export function useWebVitals() {
       metrics.push(metric);
       
       // Send to analytics service (example)
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', metric.name, {
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', metric.name, {
           value: Math.round(metric.value),
           metric_rating: metric.rating,
           custom_parameter: metric.timestamp
@@ -52,7 +52,7 @@ export function useWebVitals() {
 
     try {
       // Largest Contentful Paint (LCP)
-      if (PerformanceObserver.supportedEntryTypes.includes('largest-contentful-paint')) {
+      if (PerformanceObserver.supportedEntryTypes?.includes('largest-contentful-paint')) {
         const lcpObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
           const lastEntry = entries[entries.length - 1];
@@ -71,10 +71,11 @@ export function useWebVitals() {
       }
 
       // First Input Delay (FID) via Event Timing API
-      if (PerformanceObserver.supportedEntryTypes.includes('first-input')) {
+      if (PerformanceObserver.supportedEntryTypes?.includes('first-input')) {
         const fidObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            const fidValue = entry.processingStart - entry.startTime;
+            const fidEntry = entry as PerformanceEventTiming;
+            const fidValue = fidEntry.processingStart - fidEntry.startTime;
             
             trackMetric({
               name: 'FID',
@@ -90,12 +91,13 @@ export function useWebVitals() {
       }
 
       // Cumulative Layout Shift (CLS)
-      if (PerformanceObserver.supportedEntryTypes.includes('layout-shift')) {
+      if (PerformanceObserver.supportedEntryTypes?.includes('layout-shift')) {
         let clsValue = 0;
         const clsObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            if (!entry.hadRecentInput) {
-              clsValue += entry.value;
+            const layoutShiftEntry = entry as LayoutShift;
+            if (!layoutShiftEntry.hadRecentInput) {
+              clsValue += layoutShiftEntry.value;
             }
           }
           
@@ -112,7 +114,7 @@ export function useWebVitals() {
       }
 
       // Time to First Byte (TTFB)
-      if (PerformanceObserver.supportedEntryTypes.includes('navigation')) {
+      if (PerformanceObserver.supportedEntryTypes?.includes('navigation')) {
         const navigationObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
             const navEntry = entry as PerformanceNavigationTiming;
@@ -138,4 +140,14 @@ export function useWebVitals() {
       console.warn('Error setting up performance observers:', error);
     }
   }, []);
+}
+
+// Type definitions for performance APIs
+interface PerformanceEventTiming extends PerformanceEntry {
+  processingStart: number;
+}
+
+interface LayoutShift extends PerformanceEntry {
+  value: number;
+  hadRecentInput: boolean;
 }

@@ -12,9 +12,11 @@ export interface ComponentVariation {
 interface UseComponentVariationsReturn {
   variations: ComponentVariation[];
   activeVariation: string | null;
-  setActiveVariation: (id: string | null) => void;
-  addCustomVariation: (variation: Omit<ComponentVariation, 'id'>) => void;
-  removeVariation: (id: string) => void;
+  variationHandlers: {
+    setActiveVariation: (id: string | null) => void;
+    addCustomVariation: (variation: Omit<ComponentVariation, 'id'>) => void;
+    removeVariation: (id: string) => void;
+  };
 }
 
 const defaultVariations: Record<string, ComponentVariation[]> = {
@@ -63,14 +65,18 @@ export const useComponentVariations = (componentType: string): UseComponentVaria
   }, []);
 
   const removeVariation = useCallback((id: string) => {
-    setVariations(prev => prev.filter(v => v.id !== id && !v.id.startsWith('custom-')));
+    setVariations(prev => prev.filter(v => v.id !== id));
   }, []);
+
+  const variationHandlers = {
+    setActiveVariation,
+    addCustomVariation,
+    removeVariation
+  };
 
   return {
     variations,
     activeVariation,
-    setActiveVariation,
-    addCustomVariation,
-    removeVariation
+    variationHandlers
   };
 };

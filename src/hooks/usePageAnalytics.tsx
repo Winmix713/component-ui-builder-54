@@ -19,7 +19,7 @@ export function usePageAnalytics() {
       trackEvent('page_load_time', {
         page_path: location.pathname,
         load_time: Math.round(loadTime),
-        connection_type: navigator.connection?.effectiveType || 'unknown'
+        connection_type: (navigator as any).connection?.effectiveType || 'unknown'
       });
     }
 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LazyCodeEditor } from './LazyCodeEditor';
@@ -98,7 +99,6 @@ export const PlaygroundTabs: React.FC<PlaygroundTabsProps> = React.memo(({
         <ComponentErrorBoundary>
           <div role="region" aria-label="Component variations and presets">
             <ComponentVariations
-              componentType={componentType}
               variations={variations}
               activeVariation={activeVariation}
               onVariationSelect={onVariationSelect}

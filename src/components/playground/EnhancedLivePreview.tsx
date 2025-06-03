@@ -15,7 +15,7 @@ import { debounce } from '@/lib/utils';
 interface EnhancedLivePreviewProps {
   code: string;
   componentType: string;
-  onError?: (error: Error) => void;
+  onRenderError?: (error: Error) => void;
 }
 
 interface PreviewSettings {
@@ -28,7 +28,7 @@ interface PreviewSettings {
 export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.memo(({ 
   code, 
   componentType,
-  onError 
+  onRenderError 
 }) => {
   const [error, setError] = useState<Error | null>(null);
   const [renderCount, setRenderCount] = useState(0);
@@ -85,7 +85,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
 
       // Schedule error callback for next tick to avoid setState during render
       setTimeout(() => {
-        onError?.(err);
+        onRenderError?.(err);
       }, 0);
 
       return (
@@ -102,7 +102,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
         </Alert>
       );
     }
-  }, [code, onError]);
+  }, [code, onRenderError]);
 
   const handleRefresh = () => {
     setRenderCount(0);
@@ -132,15 +132,15 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
   };
 
   useEffect(() => {
-    if (error && onError) {
+    if (error && onRenderError) {
       // Use setTimeout to avoid setState during render
       const timeoutId = setTimeout(() => {
-        onError(error);
+        onRenderError(error);
       }, 0);
 
       return () => clearTimeout(timeoutId);
     }
-  }, [error, onError]);
+  }, [error, onRenderError]);
 
   return (
     <div className="space-y-4">
@@ -244,3 +244,5 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
     </div>
   );
 });
+
+EnhancedLivePreview.displayName = 'EnhancedLivePreview';

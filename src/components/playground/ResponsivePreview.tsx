@@ -7,9 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Monitor, Smartphone, Tablet, Eye, Accessibility } from 'lucide-react';
+import { EnhancedLivePreview } from './EnhancedLivePreview';
 
 interface ResponsivePreviewProps {
-  children: React.ReactNode;
+  code: string;
   componentType: string;
 }
 
@@ -34,7 +35,7 @@ interface AccessibilityInfo {
 }
 
 export const ResponsivePreview: React.FC<ResponsivePreviewProps> = ({
-  children,
+  code,
   componentType
 }) => {
   const [activeViewport, setActiveViewport] = useState<string>('Desktop');
@@ -113,10 +114,13 @@ export const ResponsivePreview: React.FC<ResponsivePreviewProps> = ({
                   }}
                 >
                   <div className={`
-                    h-full p-8 flex items-center justify-center transition-colors duration-300
+                    h-full transition-colors duration-300
                     ${darkMode ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}
                   `}>
-                    {children}
+                    <EnhancedLivePreview 
+                      code={code} 
+                      componentType={componentType}
+                    />
                   </div>
                 </div>
               </div>
