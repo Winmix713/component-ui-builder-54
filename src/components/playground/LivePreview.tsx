@@ -20,16 +20,16 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ code, componentType })
         .replace(/^export\s+default\s+/m, '')
         .replace(/^export\s+/m, '');
 
-      // Create a function that returns the component
+      // Create a function that returns the component with React hooks available
       const createComponent = new Function(
         'React',
         'Card', 'CardContent', 'CardHeader', 'CardTitle', 'CardDescription',
         'Button',
         'Badge',
         'Input',
-        'useState',
         `
-        const { useState } = React;
+        // Destructure React hooks to avoid redeclaration
+        const { useState, useEffect, useMemo, useCallback } = React;
         ${cleanedCode}
         return ComponentDemo;
         `
@@ -40,8 +40,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ code, componentType })
         Card, CardContent, CardHeader, CardTitle, CardDescription,
         Button,
         Badge,
-        Input,
-        React.useState
+        Input
       );
 
       return <ComponentDemo />;

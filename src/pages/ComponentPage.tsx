@@ -6,7 +6,6 @@ import { ComponentPlayground } from '@/components/playground/ComponentPlayground
 import { ComponentPageSkeleton } from '@/components/ui/skeleton-loaders';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { QuickSearch } from '@/components/search/QuickSearch';
-import { Card, CardContent } from '@/components/ui/card';
 
 const ComponentPage: React.FC = () => {
   const { component } = useParams<{ component: string }>();
@@ -29,18 +28,22 @@ const ComponentPage: React.FC = () => {
     return <ComponentPageSkeleton />;
   }
 
-  const componentTitle = component.charAt(0).toUpperCase() + component.slice(1);
+  // Convert kebab-case to proper title case (navigation-menu -> Navigation Menu)
+  const componentTitle = component
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
   
   const getInitialCode = (componentType: string): string => {
     switch (componentType) {
       case 'button':
-        return `export function ComponentDemo() {
+        return `function ComponentDemo() {
   return (
     <Button>Click me</Button>
   )
 }`;
       case 'card':
-        return `export function ComponentDemo() {
+        return `function ComponentDemo() {
   return (
     <Card className="w-80">
       <CardHeader>
@@ -54,13 +57,24 @@ const ComponentPage: React.FC = () => {
   )
 }`;
       case 'input':
-        return `export function ComponentDemo() {
+        return `function ComponentDemo() {
   return (
     <Input placeholder="Type something..." />
   )
 }`;
+      case 'navigation-menu':
+        return `function ComponentDemo() {
+  return (
+    <div className="p-4">
+      <p className="text-center">Navigation Menu component demo</p>
+      <p className="text-sm text-muted-foreground text-center mt-2">
+        This is a placeholder for the Navigation Menu component
+      </p>
+    </div>
+  )
+}`;
       default:
-        return `export function ComponentDemo() {
+        return `function ComponentDemo() {
   return (
     <div className="p-4 border rounded">
       ${componentTitle} component demo

@@ -6,7 +6,7 @@ export const generateCodeFromProps = (
 ): string => {
   switch (componentType) {
     case 'button':
-      return `export function ComponentDemo() {
+      return `function ComponentDemo() {
   return (
     <Button${props.variant !== 'default' ? ` variant="${props.variant}"` : ''}${props.size !== 'default' ? ` size="${props.size}"` : ''}${props.disabled ? ' disabled' : ''}>
       ${props.children || 'Button'}
@@ -14,7 +14,7 @@ export const generateCodeFromProps = (
   )
 }`;
     case 'card':
-      return `export function ComponentDemo() {
+      return `function ComponentDemo() {
   return (
     <Card className="w-80">
       <CardHeader>
@@ -28,13 +28,13 @@ export const generateCodeFromProps = (
   )
 }`;
     case 'input':
-      return `export function ComponentDemo() {
+      return `function ComponentDemo() {
   return (
     <Input${props.type !== 'text' ? ` type="${props.type}"` : ''}${props.placeholder ? ` placeholder="${props.placeholder}"` : ''}${props.disabled ? ' disabled' : ''} />
   )
 }`;
     case 'checkbox':
-      return `export function ComponentDemo() {
+      return `function ComponentDemo() {
   const [checked, setChecked] = useState(${props.checked || false});
   
   return (
@@ -45,6 +45,17 @@ export const generateCodeFromProps = (
         onCheckedChange={setChecked}${props.disabled ? '\n        disabled' : ''}
       />
       <label htmlFor="demo">${props.label || 'Accept terms and conditions'}</label>
+    </div>
+  )
+}`;
+    case 'navigation-menu':
+      return `function ComponentDemo() {
+  return (
+    <div className="p-4">
+      <p className="text-center">Navigation Menu component</p>
+      <p className="text-sm text-muted-foreground text-center mt-2">
+        Component playground for Navigation Menu
+      </p>
     </div>
   )
 }`;

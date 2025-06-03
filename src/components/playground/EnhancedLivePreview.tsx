@@ -38,7 +38,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
         .replace(/^export\s+default\s+/m, '')
         .replace(/^export\s+/m, '');
 
-      // Create a function that returns the component
+      // Create a function that returns the component with React hooks available
       const createComponent = new Function(
         'React',
         'Card', 'CardContent', 'CardHeader', 'CardTitle', 'CardDescription',
@@ -47,7 +47,8 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
         'Input',
         'Checkbox',
         `
-        const { useState, useEffect } = React;
+        // Destructure React hooks to avoid redeclaration
+        const { useState, useEffect, useMemo, useCallback } = React;
         ${cleanedCode}
         return ComponentDemo;
         `
