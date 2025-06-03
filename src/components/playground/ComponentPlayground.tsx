@@ -3,7 +3,9 @@ import React, { useMemo, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlaygroundHeader } from './PlaygroundHeader';
 import { PlaygroundTabs } from './PlaygroundTabs';
+import { GlobalKeyboardShortcuts } from './GlobalKeyboardShortcuts';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { KeyboardNavigationProvider } from '@/components/accessibility/KeyboardNavigationProvider';
 import { ComponentPlaygroundSkeleton } from '@/components/ui/skeleton-loaders';
 import { usePlaygroundLogic } from '@/hooks/usePlaygroundLogic';
 
@@ -63,7 +65,8 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = React.mem
     onVariationRemove: variationHandlers.removeVariation,
     onRenderError: handlers.handleRenderError,
     onFormat: handlers.handleFormat,
-    onReset: handlers.handleReset
+    onReset: handlers.handleReset,
+    isLoading: state.isLoading
   }), [
     state.code,
     componentType,
@@ -76,7 +79,8 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = React.mem
     variationHandlers.removeVariation,
     handlers.handleRenderError,
     handlers.handleFormat,
-    handlers.handleReset
+    handlers.handleReset,
+    state.isLoading
   ]);
 
   // Memoized error handler for better performance
@@ -93,24 +97,33 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = React.mem
   console.log('ComponentPlayground: Rendering main interface');
 
   return (
-    <ErrorBoundary 
-      variant="card" 
-      showRetry={true} 
-      showDetails={process.env.NODE_ENV === 'development'}
-      onError={handlePlaygroundError}
-    >
-      <Card 
-        ref={containerRef}
-        className="glass-card backdrop-blur-md border-border/20"
-        role="region"
-        aria-label={`Interactive playground for ${title} component`}
+    <KeyboardNavigationProvider>
+      <ErrorBoundary 
+        variant="card" 
+        showRetry={true} 
+        showDetails={process.env.NODE_ENV === 'development'}
+        onError={handlePlaygroundError}
       >
-        <PlaygroundHeader {...headerProps} />
-        <CardContent>
-          <PlaygroundTabs {...tabsProps} />
-        </CardContent>
-      </Card>
-    </ErrorBoundary>
+        <Card 
+          ref={containerRef}
+          className="glass-card backdrop-blur-md border-border/20"
+          role="region"
+          aria-label={`Interactive playground for ${title} component`}
+        >
+          <PlaygroundHeader {...headerProps} />
+          <CardContent>
+            <PlaygroundTabs {...tabsProps} />
+          </CardContent>
+        </Card>
+        
+        <GlobalKeyboardShortcuts
+          onRun={handlers.handleRun}
+          onReset={handlers.handleReset}
+          onSave={handlers.handleSaveAsVariation}
+          onFormat={handlers.handleFormat}
+        />
+      </ErrorBoundary>
+    </KeyboardNavigationProvider>
   );
 });
 
