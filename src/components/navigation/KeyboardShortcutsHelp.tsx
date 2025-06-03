@@ -48,14 +48,14 @@ export function KeyboardShortcutsHelp() {
               <span className="text-sm">{shortcut.description}</span>
               <div className="flex items-center space-x-1">
                 {shortcut.keys.map((key, keyIndex) => (
-                  <React.Fragment key={keyIndex}>
+                  <div key={keyIndex} className="flex items-center">
                     <Badge variant="outline" className="text-xs font-mono">
                       {key}
                     </Badge>
                     {keyIndex < shortcut.keys.length - 1 && (
-                      <span className="text-xs text-muted-foreground">+</span>
+                      <span className="text-xs text-muted-foreground mx-1">+</span>
                     )}
-                  </React.Fragment>
+                  </div>
                 ))}
               </div>
             </div>

@@ -30,6 +30,8 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
   initialCode,
   title
 }) => {
+  console.log('ComponentPlayground: Initializing with', { componentType, title, initialCodeLength: initialCode.length });
+  
   usePerformanceMonitor('ComponentPlayground');
   const { containerRef } = useFocusManagement({ autoFocus: false });
   
@@ -44,6 +46,13 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
     setExecutionTime,
     reset
   } = usePlaygroundState(initialCode);
+
+  console.log('ComponentPlayground: Current state', { 
+    codeLength: state.code.length, 
+    propsCount: Object.keys(state.props).length,
+    isRunning: state.isRunning,
+    errorCount: state.renderErrors.length
+  });
 
   const {
     variations,
@@ -75,10 +84,12 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
   });
 
   const handleRenderError = (error: Error) => {
+    console.log('ComponentPlayground: Render error occurred', error.message);
     addRenderError(error);
   };
 
   const handleFormat = () => {
+    console.log('ComponentPlayground: Formatting code');
     const formatted = state.code
       .split('\n')
       .map(line => line.trim())
@@ -87,6 +98,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
   };
 
   const handleVariationSelectWithActiveState = (variation: any) => {
+    console.log('ComponentPlayground: Selecting variation', variation.name);
     setActiveVariation(variation.id);
     handleVariationSelect(variation);
   };
@@ -99,8 +111,11 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
   });
 
   if (state.isLoading) {
+    console.log('ComponentPlayground: Showing loading skeleton');
     return <ComponentPlaygroundSkeleton />;
   }
+
+  console.log('ComponentPlayground: Rendering main interface');
 
   return (
     <ErrorBoundary>
