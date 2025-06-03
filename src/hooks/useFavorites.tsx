@@ -1,8 +1,14 @@
 
 import { useState, useCallback, useEffect } from 'react';
 
+interface FavoriteItem {
+  title: string;
+  href: string;
+  category: string;
+}
+
 export const useFavorites = () => {
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
 
   useEffect(() => {
     const stored = localStorage.getItem('component-favorites');
@@ -15,19 +21,20 @@ export const useFavorites = () => {
     }
   }, []);
 
-  const toggleFavorite = useCallback((componentId: string) => {
+  const toggleFavorite = useCallback((item: FavoriteItem) => {
     setFavorites(prev => {
-      const updated = prev.includes(componentId)
-        ? prev.filter(id => id !== componentId)
-        : [...prev, componentId];
+      const isAlreadyFavorite = prev.some(fav => fav.href === item.href);
+      const updated = isAlreadyFavorite
+        ? prev.filter(fav => fav.href !== item.href)
+        : [...prev, item];
 
       localStorage.setItem('component-favorites', JSON.stringify(updated));
       return updated;
     });
   }, []);
 
-  const isFavorite = useCallback((componentId: string) => {
-    return favorites.includes(componentId);
+  const isFavorite = useCallback((href: string) => {
+    return favorites.some(fav => fav.href === href);
   }, [favorites]);
 
   const clearFavorites = useCallback(() => {

@@ -2,8 +2,9 @@
 import { useState, useCallback, useEffect } from 'react';
 
 interface RecentlyViewedItem {
-  id: string;
-  name: string;
+  title: string;
+  href: string;
+  category: string;
   visitedAt: Date;
 }
 
@@ -25,11 +26,11 @@ export const useRecentlyViewed = () => {
     }
   }, []);
 
-  const addRecentlyViewed = useCallback((componentId: string, componentName: string) => {
+  const addRecentlyViewed = useCallback((title: string, href: string, category: string) => {
     setRecentlyViewed(prev => {
-      const filtered = prev.filter(item => item.id !== componentId);
+      const filtered = prev.filter(item => item.href !== href);
       const updated = [
-        { id: componentId, name: componentName, visitedAt: new Date() },
+        { title, href, category, visitedAt: new Date() },
         ...filtered
       ].slice(0, 20); // Keep only 20 most recent
 
@@ -44,7 +45,7 @@ export const useRecentlyViewed = () => {
   }, []);
 
   return {
-    recentlyViewed,
+    recentItems: recentlyViewed, // Return as recentItems for consistency with Sidebar
     addRecentlyViewed,
     clearRecentlyViewed
   };

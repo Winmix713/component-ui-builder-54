@@ -1,86 +1,71 @@
 
-import { useState, useEffect } from 'react';
-import { SearchResult, searchData, categories } from '@/components/search/SearchData';
-import { SearchFilter } from '@/components/search/SearchFilters';
+import { useState, useCallback, useMemo } from 'react';
+import { useSearchHistory } from './useSearchHistory';
+import { SearchFilters } from '@/components/search/SearchFilters';
 
-export function useSearchLogic() {
+interface UseSearchLogicProps {
+  onSelect?: (result: any) => void;
+}
+
+export const useSearchLogic = ({ onSelect }: UseSearchLogicProps = {}) => {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isSearching, setIsSearching] = useState(false);
-  
-  const [filters, setFilters] = useState<SearchFilter[]>(
-    categories.slice(1).map(cat => ({ key: cat, label: cat, active: false }))
-  );
+  const [filters, setFilters] = useState({
+    category: '',
+    difficulty: '',
+    tags: [] as string[]
+  });
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Fuzzy search implementation
-  const fuzzySearch = (searchQuery: string, items: SearchResult[]): SearchResult[] => {
-    if (!searchQuery.trim()) return [];
+  const { addSearchTerm, searchHistory } = useSearchHistory();
 
-    const queryLower = searchQuery.toLowerCase();
-    const activeCategories = filters.filter(f => f.active).map(f => f.key);
-    
-    let filteredItems = items;
-    if (activeCategories.length > 0) {
-      filteredItems = items.filter(item => activeCategories.includes(item.category));
+  const handleSearch = useCallback((searchQuery: string) => {
+    setQuery(searchQuery);
+    if (searchQuery.trim()) {
+      addSearchTerm(searchQuery);
     }
-    
-    return filteredItems
-      .filter(item => 
-        item.title.toLowerCase().includes(queryLower) ||
-        item.category.toLowerCase().includes(queryLower) ||
-        item.description?.toLowerCase().includes(queryLower)
-      )
-      .sort((a, b) => {
-        const aTitle = a.title.toLowerCase();
-        const bTitle = b.title.toLowerCase();
-        
-        if (aTitle === queryLower) return -1;
-        if (bTitle === queryLower) return 1;
-        
-        if (aTitle.startsWith(queryLower) && !bTitle.startsWith(queryLower)) return -1;
-        if (bTitle.startsWith(queryLower) && !aTitle.startsWith(queryLower)) return 1;
-        
-        return aTitle.localeCompare(bTitle);
-      });
-  };
+  }, [addSearchTerm]);
 
-  useEffect(() => {
-    if (query) {
-      setIsSearching(true);
-      const timer = setTimeout(() => {
-        const searchResults = fuzzySearch(query, searchData);
-        setResults(searchResults);
-        setSelectedIndex(0);
-        setIsSearching(false);
-      }, 150);
+  const handleSelect = useCallback((result: any) => {
+    onSelect?.(result);
+    setIsOpen(false);
+  }, [onSelect]);
 
-      return () => clearTimeout(timer);
-    } else {
-      setResults([]);
-      setIsSearching(false);
-    }
+  const results = useMemo(() => {
+    // Mock search results - in a real app, this would come from an API
+    const allComponents = [
+      { id: 'button', name: 'Button', category: 'Form', difficulty: 'Easy', tags: ['interactive', 'form'] },
+      { id: 'input', name: 'Input', category: 'Form', difficulty: 'Easy', tags: ['form', 'text'] },
+      { id: 'card', name: 'Card', category: 'Layout', difficulty: 'Easy', tags: ['container', 'layout'] },
+      { id: 'dialog', name: 'Dialog', category: 'Overlay', difficulty: 'Medium', tags: ['modal', 'overlay'] },
+      { id: 'table', name: 'Table', category: 'Data', difficulty: 'Hard', tags: ['data', 'grid'] },
+      { id: 'calendar', name: 'Calendar', category: 'Form', difficulty: 'Hard', tags: ['date', 'picker'] }
+    ];
+
+    return allComponents.filter(component => {
+      const matchesQuery = !query || 
+        component.name.toLowerCase().includes(query.toLowerCase()) ||
+        component.category.toLowerCase().includes(query.toLowerCase()) ||
+        component.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()));
+
+      const matchesCategory = !filters.category || component.category === filters.category;
+      const matchesDifficulty = !filters.difficulty || component.difficulty === filters.difficulty;
+      const matchesTags = filters.tags.length === 0 || 
+        filters.tags.some(tag => component.tags.includes(tag));
+
+      return matchesQuery && matchesCategory && matchesDifficulty && matchesTags;
+    });
   }, [query, filters]);
-
-  const handleFilterToggle = (key: string) => {
-    setFilters(prev => prev.map(filter => 
-      filter.key === key ? { ...filter, active: !filter.active } : filter
-    ));
-  };
-
-  const handleClearFilters = () => {
-    setFilters(prev => prev.map(filter => ({ ...filter, active: false })));
-  };
 
   return {
     query,
     setQuery,
-    results,
-    selectedIndex,
-    setSelectedIndex,
-    isSearching,
     filters,
-    handleFilterToggle,
-    handleClearFilters
+    setFilters,
+    isOpen,
+    setIsOpen,
+    results,
+    searchHistory,
+    handleSearch,
+    handleSelect
   };
-}
+};

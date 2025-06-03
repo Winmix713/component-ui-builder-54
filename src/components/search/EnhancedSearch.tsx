@@ -18,11 +18,15 @@ import { HistoryTab } from './HistoryTab';
 interface EnhancedSearchProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  placeholder?: string;
+  className?: string;
 }
 
 export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
   open,
-  onOpenChange
+  onOpenChange,
+  placeholder = "Search components...",
+  className = ""
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('search');
@@ -35,7 +39,7 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
 
   const { addSearchTerm, searchHistory } = useSearchHistory();
   const { favorites, toggleFavorite } = useFavorites();
-  const { recentlyViewed } = useRecentlyViewed();
+  const { recentItems } = useRecentlyViewed();
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -73,9 +77,9 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full justify-start text-muted-foreground">
+        <Button variant="outline" className={`w-full justify-start text-muted-foreground ${className}`}>
           <Search className="mr-2 h-4 w-4" />
-          Search components...
+          {placeholder}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl p-0">
@@ -83,7 +87,7 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
           <div className="flex items-center border-b px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
             <CommandInput
-              placeholder="Search components..."
+              placeholder={placeholder}
               value={searchQuery}
               onValueChange={handleSearch}
               className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
@@ -136,8 +140,17 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
                         window.location.href = `/components/${component.id}`;
                         onOpenChange?.(false);
                       }}
-                      favorites={favorites}
-                      onToggleFavorite={toggleFavorite}
+                      favorites={favorites.map(f => f.href)}
+                      onToggleFavorite={(componentId) => {
+                        const component = filteredResults.find(c => c.id === componentId);
+                        if (component) {
+                          toggleFavorite({
+                            title: component.name,
+                            href: `/components/${component.id}`,
+                            category: component.category
+                          });
+                        }
+                      }}
                     />
                   </CommandGroup>
                 )}
@@ -146,7 +159,11 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
 
             <TabsContent value="recent" className="mt-0">
               <RecentTab 
-                recentlyViewed={recentlyViewed}
+                recentlyViewed={recentItems.map(item => ({
+                  id: item.href.split('/').pop() || '',
+                  name: item.title,
+                  visitedAt: item.visitedAt
+                }))}
                 onSelect={(component) => {
                   window.location.href = `/components/${component.id}`;
                   onOpenChange?.(false);
@@ -156,12 +173,17 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
 
             <TabsContent value="favorites" className="mt-0">
               <FavoritesTab 
-                favorites={favorites}
-                onSelect={(component) => {
-                  window.location.href = `/components/${component}`;
+                favorites={favorites.map(f => f.href)}
+                onSelect={(componentHref) => {
+                  window.location.href = componentHref;
                   onOpenChange?.(false);
                 }}
-                onRemove={toggleFavorite}
+                onRemove={(componentHref) => {
+                  const favorite = favorites.find(f => f.href === componentHref);
+                  if (favorite) {
+                    toggleFavorite(favorite);
+                  }
+                }}
               />
             </TabsContent>
 
