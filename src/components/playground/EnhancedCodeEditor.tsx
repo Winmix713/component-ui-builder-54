@@ -26,6 +26,7 @@ interface EnhancedCodeEditorProps {
   onChange: (value: string | undefined) => void;
   language?: string;
   height?: string;
+  readOnly?: boolean;
   onFormat?: () => void;
   onReset?: () => void;
 }
@@ -53,6 +54,7 @@ export const EnhancedCodeEditor: React.FC<EnhancedCodeEditorProps> = ({
   onChange,
   language = 'typescript',
   height = '300px',
+  readOnly = false,
   onFormat,
   onReset
 }) => {
@@ -231,7 +233,8 @@ export const EnhancedCodeEditor: React.FC<EnhancedCodeEditorProps> = ({
                 suggest: {
                   showKeywords: true,
                   showSnippets: true
-                }
+                },
+                readOnly: readOnly
               }}
             />
           </div>
