@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ code, componentType })
 
       const ComponentDemo = createComponent(
         React,
-        Card, CardContent, Card.Header, Card.Title, Card.Description,
+        Card, CardContent, CardHeader, CardTitle, CardDescription,
         Button,
         Badge,
         Input,

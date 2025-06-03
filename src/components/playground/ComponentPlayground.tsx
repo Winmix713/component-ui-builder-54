@@ -16,7 +16,7 @@ interface ComponentPlaygroundProps {
   title: string;
 }
 
-const generateCodeFromProps = (componentType: string, props: Record<string, any>): string => {
+const generateCodeFromProps = (componentType: string, props: Record<string, any>, fallbackCode: string): string => {
   switch (componentType) {
     case 'button':
       return `export function ComponentDemo() {
@@ -62,7 +62,7 @@ const generateCodeFromProps = (componentType: string, props: Record<string, any>
   )
 }`;
     default:
-      return initialCode;
+      return fallbackCode;
   }
 };
 
@@ -84,7 +84,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
 
   const handlePropsChange = (newProps: Record<string, any>) => {
     setProps(newProps);
-    const generatedCode = generateCodeFromProps(componentType, newProps);
+    const generatedCode = generateCodeFromProps(componentType, newProps, initialCode);
     setCode(generatedCode);
   };
 
