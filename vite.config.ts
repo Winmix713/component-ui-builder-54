@@ -1,34 +1,17 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import { visualizer } from "rollup-plugin-visualizer";
-import ViteImagemin from "@vheemstra/vite-plugin-imagemin";
 
 export default defineConfig(({ mode }) => ({
   server: {
     host: "0.0.0.0",
     port: 8080,
+    allowedHosts: "all",
   },
-  plugins: [
-    react(),
-    mode === "development" && componentTagger(),
-    ViteImagemin({
-      plugins: {
-        jpg: { quality: 80 },
-        png: { quality: [0.65, 0.8] },
-        gif: { optimizationLevel: 7 },
-        webp: { quality: 75 },
-      },
-    }),
-    visualizer({
-      filename: "dist/stats.html",
-      open: true,
-      gzipSize: true,
-      brotliSize: true,
-    }),
-  ].filter(Boolean),
+  plugins: [react(), mode === "development" && componentTagger()].filter(
+    Boolean,
+  ),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
