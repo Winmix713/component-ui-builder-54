@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { debounce } from '@/lib/utils';
 
 interface EnhancedLivePreviewProps {
   code: string;
@@ -24,7 +25,7 @@ interface PreviewSettings {
   showBounds: boolean;
 }
 
-export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({ 
+export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.memo(({ 
   code, 
   componentType,
   onError 
@@ -242,4 +243,4 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
       </Tabs>
     </div>
   );
-};
+});

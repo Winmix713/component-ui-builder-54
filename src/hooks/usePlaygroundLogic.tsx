@@ -1,32 +1,53 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { usePerformanceMonitor } from '@/hooks/usePerformance';
 import { useFocusManagement } from '@/hooks/useFocusManagement';
 import { useComponentVariations } from '@/hooks/useComponentVariations';
 import { usePlaygroundState } from '@/hooks/usePlaygroundState';
 import { usePlaygroundActions } from '@/hooks/usePlaygroundActions';
 import { usePlaygroundShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { toast } from '@/hooks/use-toast';
+import { generateCodeFromProps } from '@/utils/codeGeneration';
 
 interface UsePlaygroundLogicProps {
   componentType: string;
-  initialCode: string;
   title: string;
+  initialCode: string;
 }
 
-export const usePlaygroundLogic = ({
-  componentType,
-  initialCode,
-  title
-}: UsePlaygroundLogicProps) => {
-  console.log('usePlaygroundLogic: Initializing with', { componentType, title, initialCodeLength: initialCode.length });
+interface PlaygroundState {
+  code: string;
+  props: Record<string, any>;
+  isRunning: boolean;
+  errors: string[];
+  isEditorReady: boolean;
+}
+
+export const usePlaygroundLogic = ({ componentType, title, initialCode }: UsePlaygroundLogicProps) => {
+  const [state, setState] = useState<PlaygroundState>(() => ({
+    code: initialCode,
+    props: {},
+    isRunning: false,
+    errors: [],
+    isEditorReady: false
+  }));
+
+  // Memoized selectors to prevent unnecessary re-renders
+  const memoizedState = useMemo(() => ({
+    code: state.code,
+    props: state.props,
+    isRunning: state.isRunning,
+    errors: state.errors,
+    isEditorReady: state.isEditorReady,
+    errorCount: state.errors.length
+  }), [state]);
 
   usePerformanceMonitor('ComponentPlayground');
   const { containerRef } = useFocusManagement({ autoFocus: false });
 
   const {
-    state,
-    updateCode,
-    updateProps,
-    setRunning,
+    updateCode: updatePlaygroundStateCode,
+    updateProps: updatePlaygroundStateProps,
+    setRunning: setPlaygroundStateRunning,
     setLoading,
     addRenderError,
     clearRenderErrors,
@@ -34,12 +55,6 @@ export const usePlaygroundLogic = ({
     reset
   } = usePlaygroundState(initialCode);
 
-  console.log('usePlaygroundLogic: Current state', { 
-    codeLength: state.code.length, 
-    propsCount: Object.keys(state.props).length,
-    isRunning: state.isRunning,
-    errorCount: state.renderErrors.length
-  });
 
   const {
     variations,
@@ -48,6 +63,36 @@ export const usePlaygroundLogic = ({
     addCustomVariation,
     removeVariation
   } = useComponentVariations(componentType);
+
+  const updateCode = useCallback((newCode: string) => {
+    setState(prev => prev.code !== newCode ? { ...prev, code: newCode } : prev);
+  }, []);
+
+  const updateProps = useCallback((newProps: Record<string, any>) => {
+    setState(prev => {
+      const hasChanged = JSON.stringify(prev.props) !== JSON.stringify(newProps);
+      return hasChanged ? { ...prev, props: newProps } : prev;
+    });
+  }, []);
+
+  const addError = useCallback((error: string) => {
+    setState(prev => ({
+      ...prev,
+      errors: prev.errors.includes(error) ? prev.errors : [...prev.errors, error]
+    }));
+  }, []);
+
+  const clearErrors = useCallback(() => {
+    setState(prev => prev.errors.length > 0 ? { ...prev, errors: [] } : prev);
+  }, []);
+
+  const setRunning = useCallback((running: boolean) => {
+    setState(prev => prev.isRunning !== running ? { ...prev, isRunning: running } : prev);
+  }, []);
+
+  const setEditorReady = useCallback((ready: boolean) => {
+    setState(prev => prev.isEditorReady !== ready ? { ...prev, isEditorReady: ready } : prev);
+  }, []);
 
   const {
     handleCodeChange,
@@ -61,9 +106,9 @@ export const usePlaygroundLogic = ({
     componentType,
     initialCode,
     state,
-    updateCode,
-    updateProps,
-    setRunning,
+    updateCode: updatePlaygroundStateCode,
+    updateProps: updatePlaygroundStateProps,
+    setRunning: setPlaygroundStateRunning,
     clearRenderErrors,
     setExecutionTime,
     addCustomVariation,
@@ -71,12 +116,10 @@ export const usePlaygroundLogic = ({
   });
 
   const handleRenderError = useCallback((error: Error) => {
-    console.log('usePlaygroundLogic: Render error occurred', error.message);
     addRenderError(error);
   }, [addRenderError]);
 
   const handleFormat = useCallback(() => {
-    console.log('usePlaygroundLogic: Formatting code');
     const formatted = state.code
       .split('\n')
       .map(line => line.trim())
@@ -85,7 +128,6 @@ export const usePlaygroundLogic = ({
   }, [state.code, updateCode]);
 
   const handleVariationSelectWithActiveState = useCallback((variation: any) => {
-    console.log('usePlaygroundLogic: Selecting variation', variation.name);
     setActiveVariation(variation.id);
     handleVariationSelect(variation);
   }, [setActiveVariation, handleVariationSelect]);
@@ -97,11 +139,17 @@ export const usePlaygroundLogic = ({
     onReset: handleReset,
   });
 
-  return {
-    state,
+  return useMemo(() => ({
+    ...memoizedState,
+    updateCode,
+    updateProps,
+    addError,
+    clearErrors,
+    setRunning,
+    setEditorReady,
+    containerRef,
     variations,
     activeVariation,
-    containerRef,
     handlers: {
       handleCodeChange,
       handlePropsChange,
@@ -116,5 +164,5 @@ export const usePlaygroundLogic = ({
     variationHandlers: {
       removeVariation
     }
-  };
+  }), [memoizedState, updateCode, updateProps, addError, clearErrors, setRunning, setEditorReady, containerRef, variations, activeVariation, handleCodeChange, handlePropsChange, handleReset, handleRun, handleCopy, handleSaveAsVariation, handleVariationSelectWithActiveState, handleRenderError, handleFormat, removeVariation]);
 };
