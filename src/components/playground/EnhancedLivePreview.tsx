@@ -47,6 +47,11 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
     try {
       setError(null);
 
+      // Strip export keywords from the code before passing to new Function
+      const cleanedCode = code
+        .replace(/^export\s+default\s+/m, '')
+        .replace(/^export\s+/m, '');
+
       // Create a function that returns the component
       const createComponent = new Function(
         'React',
@@ -57,7 +62,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
         'Checkbox',
         `
         const { useState, useEffect } = React;
-        ${code}
+        ${cleanedCode}
         return ComponentDemo;
         `
       );

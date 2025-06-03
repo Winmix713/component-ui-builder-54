@@ -15,6 +15,11 @@ interface LivePreviewProps {
 export const LivePreview: React.FC<LivePreviewProps> = ({ code, componentType }) => {
   const renderedComponent = useMemo(() => {
     try {
+      // Strip export keywords from the code before passing to new Function
+      const cleanedCode = code
+        .replace(/^export\s+default\s+/m, '')
+        .replace(/^export\s+/m, '');
+
       // Create a function that returns the component
       const createComponent = new Function(
         'React',
@@ -25,7 +30,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ code, componentType })
         'useState',
         `
         const { useState } = React;
-        ${code}
+        ${cleanedCode}
         return ComponentDemo;
         `
       );
