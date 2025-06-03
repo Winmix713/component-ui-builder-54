@@ -37,8 +37,7 @@ export function useRecentlyViewed() {
         addRecentItem({
           title: componentName.charAt(0).toUpperCase() + componentName.slice(1),
           href: path,
-          category: 'Components',
-          timestamp: Date.now()
+          category: 'Components'
         });
       }
     }
