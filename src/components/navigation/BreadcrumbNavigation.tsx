@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
+import { ChevronRight, Home } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,31 +10,56 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { useBreadcrumbs } from '@/hooks/useBreadcrumbs';
 
-export function BreadcrumbNavigation(props: React.HTMLAttributes<HTMLElement>) {
-  const breadcrumbs = useBreadcrumbs();
-  
-  if (breadcrumbs.length <= 1) return null;
+export const BreadcrumbNavigation: React.FC = () => {
+  const location = useLocation();
+  const pathSegments = location.pathname.split('/').filter(Boolean);
+
+  const getBreadcrumbLabel = (segment: string, index: number) => {
+    if (index === 0 && segment === 'components') return 'Components';
+    if (index === 1 && pathSegments[0] === 'components') {
+      return segment.charAt(0).toUpperCase() + segment.slice(1);
+    }
+    return segment.charAt(0).toUpperCase() + segment.slice(1);
+  };
+
+  const getBreadcrumbPath = (index: number) => {
+    return '/' + pathSegments.slice(0, index + 1).join('/');
+  };
 
   return (
-    <Breadcrumb className="mb-6" {...props}>
+    <Breadcrumb>
       <BreadcrumbList>
-        {breadcrumbs.map((item, index) => (
-          <React.Fragment key={`breadcrumb-${index}-${item.label}`}>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link to="/" className="flex items-center gap-1">
+              <Home className="h-4 w-4" />
+              Home
+            </Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        
+        {pathSegments.map((segment, index) => (
+          <React.Fragment key={index}>
+            <BreadcrumbSeparator>
+              <ChevronRight className="h-4 w-4" />
+            </BreadcrumbSeparator>
             <BreadcrumbItem>
-              {item.isCurrentPage ? (
-                <BreadcrumbPage>{item.label}</BreadcrumbPage>
+              {index === pathSegments.length - 1 ? (
+                <BreadcrumbPage>
+                  {getBreadcrumbLabel(segment, index)}
+                </BreadcrumbPage>
               ) : (
                 <BreadcrumbLink asChild>
-                  <Link to={item.href || '/'}>{item.label}</Link>
+                  <Link to={getBreadcrumbPath(index)}>
+                    {getBreadcrumbLabel(segment, index)}
+                  </Link>
                 </BreadcrumbLink>
               )}
             </BreadcrumbItem>
-            {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
           </React.Fragment>
         ))}
       </BreadcrumbList>
     </Breadcrumb>
   );
-}
+};

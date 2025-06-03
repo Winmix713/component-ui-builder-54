@@ -5,6 +5,8 @@ import { BreadcrumbNavigation } from '@/components/navigation/BreadcrumbNavigati
 import { ComponentPlayground } from '@/components/playground/ComponentPlayground';
 import { ComponentPageSkeleton } from '@/components/ui/skeleton-loaders';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { QuickSearch } from '@/components/search/QuickSearch';
+import { Card, CardContent } from '@/components/ui/card';
 
 const ComponentPage: React.FC = () => {
   const { component } = useParams<{ component: string }>();
@@ -71,7 +73,10 @@ const ComponentPage: React.FC = () => {
   return (
     <ErrorBoundary>
       <div className="space-y-6">
-        <BreadcrumbNavigation />
+        <div className="flex items-center justify-between">
+          <BreadcrumbNavigation />
+          <QuickSearch />
+        </div>
         
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{componentTitle}</h1>

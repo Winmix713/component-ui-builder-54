@@ -8,6 +8,7 @@ import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { Layout } from '@/components/layout/Layout';
 import { Toaster } from '@/components/ui/toaster';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { ComponentPlaygroundSkeleton } from '@/components/ui/skeleton-loaders';
 
 // Direct lazy loading without custom wrapper
@@ -30,11 +31,13 @@ const queryClient = new QueryClient({
 const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <AccessibilityProvider>
-        <AnalyticsProvider>
-          {children}
-        </AnalyticsProvider>
-      </AccessibilityProvider>
+      <TooltipProvider>
+        <AccessibilityProvider>
+          <AnalyticsProvider>
+            {children}
+          </AnalyticsProvider>
+        </AccessibilityProvider>
+      </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
