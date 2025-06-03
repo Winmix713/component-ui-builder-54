@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ComponentCard } from '@/components/overview/ComponentCard';
 import { StatsCard } from '@/components/overview/StatsCard';
 import { SearchInput } from '@/components/search/SearchInput';
@@ -55,24 +55,36 @@ const mockComponents: Component[] = [
 const Overview: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredComponents, setFilteredComponents] = useState(mockComponents);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   usePageAnalytics();
   usePerformanceMonitor('Overview');
 
   useEffect(() => {
-    if (!searchTerm) {
-      setFilteredComponents(mockComponents);
-      return;
-    }
+    setIsSearching(true);
+    const timeoutId = setTimeout(() => {
+      if (!searchTerm) {
+        setFilteredComponents(mockComponents);
+      } else {
+        const filtered = mockComponents.filter(component =>
+          component.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          component.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          component.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        setFilteredComponents(filtered);
+      }
+      setIsSearching(false);
+    }, 300);
 
-    const filtered = mockComponents.filter(component =>
-      component.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      component.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      component.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-    
-    setFilteredComponents(filtered);
+    return () => clearTimeout(timeoutId);
   }, [searchTerm]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setSearchTerm('');
+    }
+  };
 
   const stats = {
     totalComponents: mockComponents.length,
@@ -98,6 +110,9 @@ const Overview: React.FC = () => {
           <SearchInput 
             value={searchTerm}
             onChange={setSearchTerm}
+            onKeyDown={handleKeyDown}
+            isSearching={isSearching}
+            inputRef={searchInputRef}
           />
           
           <QuickActions 

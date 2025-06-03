@@ -15,7 +15,6 @@ interface UsePlaygroundLogicProps {
 export const usePlaygroundLogic = ({ componentType, title, initialCode }: UsePlaygroundLogicProps) => {
   usePerformanceMonitor(`ComponentPlayground-${componentType}`);
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const { state, updateCode, updateProps, setRunning, addError, clearErrors } = usePlaygroundState({
     componentType,
     initialCode
@@ -36,7 +35,7 @@ export const usePlaygroundLogic = ({ componentType, title, initialCode }: UsePla
     variationHandlers
   });
 
-  useFocusManagement(containerRef);
+  const { containerRef } = useFocusManagement();
 
   const handleVariationSelectWithActiveState = (variation: any) => {
     variationHandlers.setActiveVariation(variation.id);
