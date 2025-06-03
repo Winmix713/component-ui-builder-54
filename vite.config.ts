@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -13,14 +14,27 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    ViteImagemin({
-      plugins: {
-        gifsicle: { optimizationLevel: 7 },
-        mozjpeg: { quality: 80 },
-        pngquant: { quality: [0.65, 0.8] },
-        webp: { quality: 75 },
+    ViteImagemin([
+      {
+        test: /\.(jpe?g|png)$/i,
+        plugins: {
+          mozjpeg: { quality: 80 },
+          pngquant: { quality: [0.65, 0.8] },
+        },
       },
-    }),
+      {
+        test: /\.gif$/i,
+        plugins: {
+          gifsicle: { optimizationLevel: 7 },
+        },
+      },
+      {
+        test: /\.webp$/i,
+        plugins: {
+          webp: { quality: 75 },
+        },
+      },
+    ]),
     visualizer({
       filename: "dist/stats.html",
       open: true,
@@ -28,5 +42,26 @@ export default defineConfig(({ mode }) => ({
       brotliSize: true,
     }),
   ].filter(Boolean),
-  // ... rest of your config
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+          router: ["react-router-dom"],
+          ui: ["@radix-ui/react-slot", "@radix-ui/react-toast"],
+          editor: ["@monaco-editor/react"],
+          query: ["@tanstack/react-query"],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
+  optimizeDeps: {
+    include: ["react", "react-dom", "react-router-dom"],
+  },
 }));
