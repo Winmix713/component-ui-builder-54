@@ -1,29 +1,25 @@
 
-import React, { Suspense, ComponentType } from 'react';
+import React, { Suspense } from 'react';
 import { ComponentPageSkeleton } from '@/components/ui/skeleton-loaders';
 
-interface LazyComponentProps {
-  fallback?: React.ReactNode;
-}
-
-export function lazyLoad<T extends ComponentType<any>>(
-  importFunc: () => Promise<{ default: T }>,
+export function lazyLoad(
+  importFunc: () => Promise<{ default: React.ComponentType<any> }>,
   fallback?: React.ReactNode
 ) {
   const LazyComponent = React.lazy(importFunc);
 
-  return (props: React.ComponentProps<T> & LazyComponentProps) => (
+  return (props: any) => (
     <Suspense fallback={fallback || <ComponentPageSkeleton />}>
       <LazyComponent {...props} />
     </Suspense>
   );
 }
 
-export function withSuspense<T extends ComponentType<any>>(
-  Component: T,
+export function withSuspense(
+  Component: React.ComponentType<any>,
   fallback?: React.ReactNode
 ) {
-  return (props: React.ComponentProps<T>) => (
+  return (props: any) => (
     <Suspense fallback={fallback || <ComponentPageSkeleton />}>
       <Component {...props} />
     </Suspense>

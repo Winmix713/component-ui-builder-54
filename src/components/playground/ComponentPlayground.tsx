@@ -12,6 +12,8 @@ import { EnhancedCopyButton } from '@/components/ui/enhanced-copy';
 import { ComponentPlaygroundSkeleton } from '@/components/ui/skeleton-loaders';
 import { usePlaygroundShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { usePerformanceMonitor } from '@/hooks/usePerformance';
+import { useFocusManagement } from '@/hooks/useFocusManagement';
+import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
 import { toast } from '@/hooks/use-toast';
 
 interface ComponentPlaygroundProps {
@@ -76,6 +78,8 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
   title
 }) => {
   usePerformanceMonitor('ComponentPlayground');
+  const { announceToScreenReader } = useAccessibility();
+  const { containerRef } = useFocusManagement({ autoFocus: false });
   
   const [code, setCode] = useState(initialCode);
   const [props, setProps] = useState<Record<string, any>>({});
@@ -85,6 +89,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
   const handleCodeChange = (newCode: string | undefined) => {
     if (newCode !== undefined) {
       setCode(newCode);
+      announceToScreenReader('Code updated');
     }
   };
 
@@ -92,11 +97,13 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
     setProps(newProps);
     const generatedCode = generateCodeFromProps(componentType, newProps, initialCode);
     setCode(generatedCode);
+    announceToScreenReader('Component props updated');
   };
 
   const handleReset = () => {
     setCode(initialCode);
     setProps({});
+    announceToScreenReader('Playground reset to initial state');
     toast({
       title: "Reset successful",
       description: "Playground has been reset to initial state",
@@ -105,11 +112,15 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
 
   const handleRun = () => {
     setIsRunning(true);
-    setTimeout(() => setIsRunning(false), 500);
+    announceToScreenReader('Running component code');
+    setTimeout(() => {
+      setIsRunning(false);
+      announceToScreenReader('Component code execution completed');
+    }, 500);
   };
 
   const handleCopy = () => {
-    // The copy functionality is now handled by EnhancedCopyButton
+    announceToScreenReader('Code copied to clipboard');
   };
 
   // Set up keyboard shortcuts
@@ -125,88 +136,112 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
 
   return (
     <ErrorBoundary>
-      <Card className="glass-card backdrop-blur-md border-border/20">
+      <Card 
+        ref={containerRef}
+        className="glass-card backdrop-blur-md border-border/20"
+        role="region"
+        aria-label={`Interactive playground for ${title} component`}
+      >
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <CardTitle className="text-lg">Interactive Playground</CardTitle>
-              <Badge variant="secondary" className="glass-card">
+              <CardTitle className="text-lg" id="playground-title">
+                Interactive Playground
+              </CardTitle>
+              <Badge variant="secondary" className="glass-card" aria-describedby="playground-title">
                 {title}
               </Badge>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2" role="toolbar" aria-label="Playground actions">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleRun}
                 disabled={isRunning}
                 className="glass-card"
+                aria-label={isRunning ? 'Code is running' : 'Run component code'}
               >
-                <Play className="h-4 w-4 mr-2" />
+                <Play className="h-4 w-4 mr-2" aria-hidden="true" />
                 {isRunning ? 'Running...' : 'Run'}
               </Button>
               <EnhancedCopyButton
                 code={code}
                 language="tsx"
                 className="glass-card"
+                onCopy={handleCopy}
+                aria-label="Copy code to clipboard"
               />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleReset}
                 className="glass-card"
+                aria-label="Reset playground to initial state"
               >
-                <RotateCcw className="h-4 w-4" />
+                <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                <span className="sr-only">Reset</span>
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="playground" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="playground">Playground</TabsTrigger>
-              <TabsTrigger value="code">Code</TabsTrigger>
-              <TabsTrigger value="props">Props</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3" role="tablist">
+              <TabsTrigger value="playground" role="tab">Playground</TabsTrigger>
+              <TabsTrigger value="code" role="tab">Code</TabsTrigger>
+              <TabsTrigger value="props" role="tab">Props</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="playground" className="space-y-4">
+            <TabsContent value="playground" className="space-y-4" role="tabpanel">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground">Code Editor</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground" id="code-editor-label">
+                    Code Editor
+                  </h3>
                   <ComponentErrorBoundary>
-                    <LazyCodeEditor
-                      value={code}
-                      onChange={handleCodeChange}
-                      height="400px"
-                    />
+                    <div role="region" aria-labelledby="code-editor-label">
+                      <LazyCodeEditor
+                        value={code}
+                        onChange={handleCodeChange}
+                        height="400px"
+                      />
+                    </div>
                   </ComponentErrorBoundary>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground">Live Preview</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground" id="live-preview-label">
+                    Live Preview
+                  </h3>
                   <ComponentErrorBoundary>
-                    <LivePreview code={code} componentType={componentType} />
+                    <div role="region" aria-labelledby="live-preview-label">
+                      <LivePreview code={code} componentType={componentType} />
+                    </div>
                   </ComponentErrorBoundary>
                 </div>
               </div>
             </TabsContent>
             
-            <TabsContent value="code">
+            <TabsContent value="code" role="tabpanel">
               <ComponentErrorBoundary>
-                <LazyCodeEditor
-                  value={code}
-                  onChange={handleCodeChange}
-                  height="500px"
-                />
+                <div role="region" aria-label="Full code editor">
+                  <LazyCodeEditor
+                    value={code}
+                    onChange={handleCodeChange}
+                    height="500px"
+                  />
+                </div>
               </ComponentErrorBoundary>
             </TabsContent>
             
-            <TabsContent value="props">
+            <TabsContent value="props" role="tabpanel">
               <ComponentErrorBoundary>
-                <PropsConfigurator
-                  componentType={componentType}
-                  onPropsChange={handlePropsChange}
-                  currentProps={props}
-                />
+                <div role="region" aria-label="Component properties configurator">
+                  <PropsConfigurator
+                    componentType={componentType}
+                    onPropsChange={handlePropsChange}
+                    currentProps={props}
+                  />
+                </div>
               </ComponentErrorBoundary>
             </TabsContent>
           </Tabs>
