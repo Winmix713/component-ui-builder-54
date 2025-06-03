@@ -14,27 +14,14 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    ViteImagemin([
-      {
-        test: /\.(jpe?g|png)$/i,
-        plugins: {
-          mozjpeg: { quality: 80 },
-          pngquant: { quality: [0.65, 0.8] },
-        },
+    ViteImagemin({
+      plugins: {
+        jpg: { quality: 80 },
+        png: { quality: [0.65, 0.8] },
+        gif: { optimizationLevel: 7 },
+        webp: { quality: 75 },
       },
-      {
-        test: /\.gif$/i,
-        plugins: {
-          gifsicle: { optimizationLevel: 7 },
-        },
-      },
-      {
-        test: /\.webp$/i,
-        plugins: {
-          webp: { quality: 75 },
-        },
-      },
-    ]),
+    }),
     visualizer({
       filename: "dist/stats.html",
       open: true,
