@@ -4,16 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { RotateCcw, Play } from 'lucide-react';
-import { CodeEditor } from './CodeEditor';
+import { LazyCodeEditor } from './LazyCodeEditor';
 import { LivePreview } from './LivePreview';
 import { PropsConfigurator } from './PropsConfigurator';
 import { ErrorBoundary, ComponentErrorBoundary } from '@/components/error/ErrorBoundary';
 import { EnhancedCopyButton } from '@/components/ui/enhanced-copy';
 import { ComponentPlaygroundSkeleton } from '@/components/ui/skeleton-loaders';
 import { usePlaygroundShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { usePerformanceMonitor } from '@/hooks/usePerformance';
 import { toast } from '@/hooks/use-toast';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 
 interface ComponentPlaygroundProps {
   componentType: string;
@@ -76,6 +75,8 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
   initialCode,
   title
 }) => {
+  usePerformanceMonitor('ComponentPlayground');
+  
   const [code, setCode] = useState(initialCode);
   const [props, setProps] = useState<Record<string, any>>({});
   const [isRunning, setIsRunning] = useState(false);
@@ -173,7 +174,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-muted-foreground">Code Editor</h3>
                   <ComponentErrorBoundary>
-                    <CodeEditor
+                    <LazyCodeEditor
                       value={code}
                       onChange={handleCodeChange}
                       height="400px"
@@ -191,7 +192,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
             
             <TabsContent value="code">
               <ComponentErrorBoundary>
-                <CodeEditor
+                <LazyCodeEditor
                   value={code}
                   onChange={handleCodeChange}
                   height="500px"

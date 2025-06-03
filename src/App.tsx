@@ -6,38 +6,50 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { Layout } from "./components/layout/Layout";
-import { Overview } from "./pages/Overview";
-import { ComponentPage } from "./pages/ComponentPage";
-import { DocsPage } from "./pages/DocsPage";
+import { LazyOverview } from "./pages/LazyOverview";
+import { LazyComponentPage } from "./pages/LazyComponentPage";
+import { LazyDocsPage } from "./pages/LazyDocsPage";
 import NotFound from "./pages/NotFound";
+import { useWebVitals } from "./hooks/usePerformance";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Overview />} />
-              <Route path="/installation" element={<DocsPage />} />
-              <Route path="/theming" element={<DocsPage />} />
-              <Route path="/typography" element={<DocsPage />} />
-              <Route path="/components/:component" element={<ComponentPage />} />
-              <Route path="/activity" element={<DocsPage />} />
-              <Route path="/settings" element={<DocsPage />} />
-              <Route path="/collaborators" element={<DocsPage />} />
-              <Route path="/notifications" element={<DocsPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useWebVitals();
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<LazyOverview />} />
+                <Route path="/installation" element={<LazyDocsPage />} />
+                <Route path="/theming" element={<LazyDocsPage />} />
+                <Route path="/typography" element={<LazyDocsPage />} />
+                <Route path="/components/:component" element={<LazyComponentPage />} />
+                <Route path="/activity" element={<LazyDocsPage />} />
+                <Route path="/settings" element={<LazyDocsPage />} />
+                <Route path="/collaborators" element={<LazyDocsPage />} />
+                <Route path="/notifications" element={<LazyDocsPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
