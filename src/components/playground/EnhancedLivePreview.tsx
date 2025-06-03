@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,10 +41,10 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
 
   const renderedComponent = useMemo(() => {
     const startTime = performance.now();
-    
+
     try {
       setError(null);
-      
+
       // Create a function that returns the component
       const createComponent = new Function(
         'React',
@@ -83,7 +82,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
       const err = error as Error;
       setError(err);
       onError?.(err);
-      
+
       return (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
@@ -123,9 +122,20 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
       settings.darkMode ? 'bg-slate-900 text-white' : 'bg-muted/20 backdrop-blur-sm',
       getGridBackground()
     ];
-    
+
     return baseClasses.filter(Boolean).join(' ');
   };
+
+  useEffect(() => {
+    if (error && onError) {
+      // Use setTimeout to avoid setState during render
+      const timeoutId = setTimeout(() => {
+        onError(error);
+      }, 0);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [error, onError]);
 
   return (
     <div className="space-y-4">
@@ -134,7 +144,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
           <TabsTrigger value="preview">Live Preview</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="preview" className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -152,7 +162,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
                 </Badge>
               )}
             </div>
-            
+
             <div className="flex items-center gap-2">
               {lastRenderTime > 0 && (
                 <Badge variant="outline" className="text-xs">
@@ -170,12 +180,12 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
               </Button>
             </div>
           </div>
-          
+
           <div className={getPreviewClasses()}>
             {renderedComponent}
           </div>
         </TabsContent>
-        
+
         <TabsContent value="settings" className="space-y-4">
           <Card className="glass-card">
             <CardHeader>
@@ -194,7 +204,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
                   />
                   <Label htmlFor="centerContent" className="text-sm">Center Content</Label>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="showGrid"
@@ -203,7 +213,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
                   />
                   <Label htmlFor="showGrid" className="text-sm">Show Grid</Label>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="darkMode"
@@ -212,7 +222,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = ({
                   />
                   <Label htmlFor="darkMode" className="text-sm">Dark Mode</Label>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="showBounds"

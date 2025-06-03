@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +9,7 @@ import { SearchResultsSkeleton } from '@/components/ui/skeleton-loaders';
 import { EnhancedSearch } from '@/components/search/EnhancedSearch';
 import { usePerformanceMonitor } from '@/hooks/usePerformance';
 
-const Overview: React.FC = () => {
+export const Overview: React.FC = React.memo(() => {
   usePerformanceMonitor('Overview');
 
   const featuredComponents = [
@@ -73,7 +72,7 @@ const Overview: React.FC = () => {
           <TabsTrigger value="search">Search</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="components" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {featuredComponents.map((component) => (
@@ -86,7 +85,7 @@ const Overview: React.FC = () => {
             ))}
           </div>
         </TabsContent>
-        
+
         <TabsContent value="search">
           <Card className="glass-card backdrop-blur-md border-border/20">
             <CardHeader>
@@ -97,13 +96,13 @@ const Overview: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="performance">
           <BundleAnalyzer />
         </TabsContent>
       </Tabs>
     </div>
   );
-};
+});
 
 export default Overview;

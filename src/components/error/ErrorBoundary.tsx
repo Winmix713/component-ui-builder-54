@@ -28,6 +28,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    // Track error in analytics if available
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'exception', {
+        description: error.message,
+        fatal: false,
+        custom_parameter: errorInfo.componentStack
+      });
+    }
+    
     this.props.onError?.(error, errorInfo);
   }
 
