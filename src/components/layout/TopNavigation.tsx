@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { EnhancedSearch } from '@/components/search/EnhancedSearch';
+import { KeyboardShortcutsHelp } from '@/components/navigation/KeyboardShortcutsHelp';
 
 interface TopNavigationProps {
   onMenuClick: () => void;
@@ -43,6 +43,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ onMenuClick }) => 
 
         <div className="ml-auto flex items-center space-x-4">
           <EnhancedSearch className="hidden md:flex" />
+          <KeyboardShortcutsHelp />
           <ThemeToggle />
           <span className="text-sm text-muted-foreground hidden lg:block">View feedback</span>
           <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Command, Loader2 } from 'lucide-react';
+import { Search, Command, Loader2, History, Filter, Heart, Clock, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,12 @@ import {
 } from '@/components/ui/dialog';
 import { SearchResultsSkeleton } from '@/components/ui/skeleton-loaders';
 import { useNavigate } from 'react-router-dom';
+import { useSearchHistory } from '@/hooks/useSearchHistory';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import { useFavorites } from '@/hooks/useFavorites';
+import { SearchFilters, SearchFilter } from './SearchFilters';
+import { QuickActions } from './QuickActions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface SearchResult {
   title: string;
@@ -39,6 +45,8 @@ const searchData: SearchResult[] = [
   { title: "Typography", href: "/typography", category: "Docs", description: "Text styling guide" },
 ];
 
+const categories = ['All', 'Layout', 'Forms', 'Navigation', 'Data Display', 'Feedback', 'Docs'];
+
 interface EnhancedSearchProps {
   placeholder?: string;
   className?: string;
@@ -50,15 +58,32 @@ export function EnhancedSearch({ placeholder = "Search components...", className
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
+  const [activeTab, setActiveTab] = useState('search');
+  
+  const [filters, setFilters] = useState<SearchFilter[]>(
+    categories.slice(1).map(cat => ({ key: cat, label: cat, active: false }))
+  );
+
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  const { history, addToHistory, clearHistory, removeFromHistory } = useSearchHistory();
+  const { recentItems, clearRecent } = useRecentlyViewed();
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
 
   // Fuzzy search implementation
   const fuzzySearch = (searchQuery: string, items: SearchResult[]): SearchResult[] => {
     if (!searchQuery.trim()) return [];
 
     const query = searchQuery.toLowerCase();
-    return items
+    const activeCategories = filters.filter(f => f.active).map(f => f.key);
+    
+    let filteredItems = items;
+    if (activeCategories.length > 0) {
+      filteredItems = items.filter(item => activeCategories.includes(item.category));
+    }
+    
+    return filteredItems
       .filter(item => 
         item.title.toLowerCase().includes(query) ||
         item.category.toLowerCase().includes(query) ||
@@ -68,15 +93,12 @@ export function EnhancedSearch({ placeholder = "Search components...", className
         const aTitle = a.title.toLowerCase();
         const bTitle = b.title.toLowerCase();
         
-        // Exact matches first
         if (aTitle === query) return -1;
         if (bTitle === query) return 1;
         
-        // Starts with query
         if (aTitle.startsWith(query) && !bTitle.startsWith(query)) return -1;
         if (bTitle.startsWith(query) && !aTitle.startsWith(query)) return 1;
         
-        // Alphabetical
         return aTitle.localeCompare(bTitle);
       });
   };
@@ -97,7 +119,7 @@ export function EnhancedSearch({ placeholder = "Search components...", className
       setResults([]);
       setIsSearching(false);
     }
-  }, [query]);
+  }, [query, filters]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -118,8 +140,23 @@ export function EnhancedSearch({ placeholder = "Search components...", className
 
   const handleSelect = (result: SearchResult) => {
     navigate(result.href);
+    addToHistory(query, result.category);
     setIsOpen(false);
     setQuery('');
+  };
+
+  const handleQuickNavigation = (result: SearchResult) => {
+    window.open(result.href, '_blank');
+  };
+
+  const handleFilterToggle = (key: string) => {
+    setFilters(prev => prev.map(filter => 
+      filter.key === key ? { ...filter, active: !filter.active } : filter
+    ));
+  };
+
+  const handleClearFilters = () => {
+    setFilters(prev => prev.map(filter => ({ ...filter, active: false })));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -179,41 +216,201 @@ export function EnhancedSearch({ placeholder = "Search components...", className
             />
           </div>
 
-          {isSearching ? (
-            <SearchResultsSkeleton />
-          ) : results.length > 0 ? (
-            <div className="max-h-80 overflow-y-auto">
-              {results.map((result, index) => (
-                <div
-                  key={result.href}
-                  className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                    index === selectedIndex 
-                      ? 'bg-accent text-accent-foreground' 
-                      : 'hover:bg-muted/50'
-                  }`}
-                  onClick={() => handleSelect(result)}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">{result.title}</span>
-                      <Badge variant="secondary" className="text-xs">
-                        {result.category}
-                      </Badge>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="search">Search</TabsTrigger>
+              <TabsTrigger value="recent">Recent</TabsTrigger>
+              <TabsTrigger value="favorites">Favorites</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="search" className="mt-4">
+              <SearchFilters 
+                filters={filters}
+                onFilterToggle={handleFilterToggle}
+                onClearAll={handleClearFilters}
+              />
+              
+              {isSearching ? (
+                <SearchResultsSkeleton />
+              ) : results.length > 0 ? (
+                <div className="max-h-80 overflow-y-auto">
+                  {results.map((result, index) => (
+                    <div
+                      key={result.href}
+                      className={`group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                        index === selectedIndex 
+                          ? 'bg-accent text-accent-foreground' 
+                          : 'hover:bg-muted/50'
+                      }`}
+                      onClick={() => handleSelect(result)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">{result.title}</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {result.category}
+                          </Badge>
+                          {isFavorite(result.href) && (
+                            <Heart className="h-3 w-3 fill-current text-red-500" />
+                          )}
+                        </div>
+                        {result.description && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {result.description}
+                          </p>
+                        )}
+                      </div>
+                      <QuickActions
+                        result={result}
+                        onNavigate={handleQuickNavigation}
+                        onAddToFavorites={() => toggleFavorite(result)}
+                        isFavorite={isFavorite(result.href)}
+                      />
                     </div>
-                    {result.description && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {result.description}
-                      </p>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : query && !isSearching ? (
-            <div className="py-6 text-center text-sm text-muted-foreground">
-              No results found for "{query}"
-            </div>
-          ) : null}
+              ) : query && !isSearching ? (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  No results found for "{query}"
+                </div>
+              ) : null}
+            </TabsContent>
+            
+            <TabsContent value="recent" className="mt-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Recently Viewed</span>
+                </div>
+                {recentItems.length > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearRecent}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              {recentItems.length > 0 ? (
+                <div className="max-h-80 overflow-y-auto space-y-1">
+                  {recentItems.map((item) => (
+                    <div
+                      key={item.href}
+                      className="group flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleSelect(item)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">{item.title}</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {item.category}
+                          </Badge>
+                        </div>
+                      </div>
+                      <QuickActions
+                        result={item}
+                        onNavigate={handleQuickNavigation}
+                        onAddToFavorites={() => toggleFavorite(item)}
+                        isFavorite={isFavorite(item.href)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  No recently viewed components
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="favorites" className="mt-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <Heart className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Favorites</span>
+                </div>
+              </div>
+              {favorites.length > 0 ? (
+                <div className="max-h-80 overflow-y-auto space-y-1">
+                  {favorites.map((item) => (
+                    <div
+                      key={item.href}
+                      className="group flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleSelect(item)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">{item.title}</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {item.category}
+                          </Badge>
+                          <Heart className="h-3 w-3 fill-current text-red-500" />
+                        </div>
+                      </div>
+                      <QuickActions
+                        result={item}
+                        onNavigate={handleQuickNavigation}
+                        onAddToFavorites={() => toggleFavorite(item)}
+                        isFavorite={true}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  No favorite components yet
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="history" className="mt-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <History className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Search History</span>
+                </div>
+                {history.length > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearHistory}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              {history.length > 0 ? (
+                <div className="max-h-80 overflow-y-auto space-y-1">
+                  {history.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => setQuery(item.query)}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <History className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-sm">{item.query}</span>
+                        {item.category && (
+                          <Badge variant="outline" className="text-xs">
+                            {item.category}
+                          </Badge>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFromHistory(item.query);
+                        }}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  No search history yet
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
 
           <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3">
             <span>Use ↑↓ to navigate, Enter to select, Esc to close</span>

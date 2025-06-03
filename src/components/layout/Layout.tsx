@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { TopNavigation } from './TopNavigation';
+import { useGlobalKeyboardShortcuts } from '@/hooks/useGlobalKeyboardShortcuts';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,6 +10,9 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Enable global keyboard shortcuts
+  useGlobalKeyboardShortcuts();
 
   const handleMenuClick = () => {
     setSidebarOpen(!sidebarOpen);
