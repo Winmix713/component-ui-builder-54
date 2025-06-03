@@ -1,11 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { EnhancedSearch } from './EnhancedSearch';
-import { useKeyboardNavigation } from '@/components/accessibility/KeyboardNavigationProvider';
 
 export const GlobalSearchShortcut: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const { registerShortcut, unregisterShortcut } = useKeyboardNavigation();
 
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
@@ -13,16 +11,18 @@ export const GlobalSearchShortcut: React.FC = () => {
         e.preventDefault();
         setOpen(true);
       }
+      
+      if (e.key === 'Escape') {
+        setOpen(false);
+      }
     };
 
-    registerShortcut('Ctrl+k', () => setOpen(true), 'Open global search');
     document.addEventListener('keydown', handleKeydown);
 
     return () => {
-      unregisterShortcut('Ctrl+k');
       document.removeEventListener('keydown', handleKeydown);
     };
-  }, [registerShortcut, unregisterShortcut]);
+  }, []);
 
   return (
     <EnhancedSearch 

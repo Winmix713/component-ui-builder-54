@@ -5,7 +5,6 @@ import { PlaygroundHeader } from './PlaygroundHeader';
 import { PlaygroundTabs } from './PlaygroundTabs';
 import { GlobalKeyboardShortcuts } from './GlobalKeyboardShortcuts';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
-import { KeyboardNavigationProvider } from '@/components/accessibility/KeyboardNavigationProvider';
 import { ComponentPlaygroundSkeleton } from '@/components/ui/skeleton-loaders';
 import { usePlaygroundLogic } from '@/hooks/usePlaygroundLogic';
 
@@ -85,45 +84,42 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = React.mem
 
   // Memoized error handler for better performance
   const handlePlaygroundError = useCallback((error: Error) => {
-    console.error('ComponentPlayground error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('ComponentPlayground error:', error);
+    }
     handlers.handleRenderError(error);
   }, [handlers.handleRenderError]);
 
   if (state.isLoading) {
-    console.log('ComponentPlayground: Showing loading skeleton');
     return <ComponentPlaygroundSkeleton />;
   }
 
-  console.log('ComponentPlayground: Rendering main interface');
-
   return (
-    <KeyboardNavigationProvider>
-      <ErrorBoundary 
-        variant="card" 
-        showRetry={true} 
-        showDetails={process.env.NODE_ENV === 'development'}
-        onError={handlePlaygroundError}
+    <ErrorBoundary 
+      variant="card" 
+      showRetry={true} 
+      showDetails={process.env.NODE_ENV === 'development'}
+      onError={handlePlaygroundError}
+    >
+      <Card 
+        ref={containerRef}
+        className="glass-card backdrop-blur-md border-border/20"
+        role="region"
+        aria-label={`Interactive playground for ${title} component`}
       >
-        <Card 
-          ref={containerRef}
-          className="glass-card backdrop-blur-md border-border/20"
-          role="region"
-          aria-label={`Interactive playground for ${title} component`}
-        >
-          <PlaygroundHeader {...headerProps} />
-          <CardContent>
-            <PlaygroundTabs {...tabsProps} />
-          </CardContent>
-        </Card>
-        
-        <GlobalKeyboardShortcuts
-          onRun={handlers.handleRun}
-          onReset={handlers.handleReset}
-          onSave={handlers.handleSaveAsVariation}
-          onFormat={handlers.handleFormat}
-        />
-      </ErrorBoundary>
-    </KeyboardNavigationProvider>
+        <PlaygroundHeader {...headerProps} />
+        <CardContent>
+          <PlaygroundTabs {...tabsProps} />
+        </CardContent>
+      </Card>
+      
+      <GlobalKeyboardShortcuts
+        onRun={handlers.handleRun}
+        onReset={handlers.handleReset}
+        onSave={handlers.handleSaveAsVariation}
+        onFormat={handlers.handleFormat}
+      />
+    </ErrorBoundary>
   );
 });
 

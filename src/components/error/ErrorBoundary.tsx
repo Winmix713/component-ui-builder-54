@@ -22,6 +22,7 @@ interface State {
 
 export class ErrorBoundary extends Component<Props, State> {
   private retryTimeouts: NodeJS.Timeout[] = [];
+  private unhandledRejectionHandler?: (event: PromiseRejectionEvent) => void;
 
   constructor(props: Props) {
     super(props);
@@ -32,8 +33,28 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error, retryCount: 0 };
   }
 
+  componentDidMount() {
+    // Handle unhandled promise rejections
+    this.unhandledRejectionHandler = (event: PromiseRejectionEvent) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Unhandled promise rejection:', event.reason);
+      }
+      
+      // Convert promise rejection to error
+      const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+      this.setState({ hasError: true, error, retryCount: 0 });
+      
+      // Prevent default browser behavior
+      event.preventDefault();
+    };
+
+    window.addEventListener('unhandledrejection', this.unhandledRejectionHandler);
+  }
+
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('ErrorBoundary caught an error:', error, errorInfo);
+    }
     
     // Track error in analytics if available
     if (typeof window !== 'undefined' && window.gtag) {
@@ -49,6 +70,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentWillUnmount() {
     this.retryTimeouts.forEach(timeout => clearTimeout(timeout));
+    
+    if (this.unhandledRejectionHandler) {
+      window.removeEventListener('unhandledrejection', this.unhandledRejectionHandler);
+    }
   }
 
   handleRetry = () => {

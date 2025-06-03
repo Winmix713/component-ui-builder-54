@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { debounce } from '@/lib/utils';
 
 interface EnhancedLivePreviewProps {
   code: string;
@@ -40,6 +39,15 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
     centerContent: true,
     showBounds: false
   });
+
+  // Memoized error callback to prevent re-renders
+  const handleRenderError = useCallback((error: Error) => {
+    setError(error);
+    // Use setTimeout to avoid setState during render
+    setTimeout(() => {
+      onRenderError?.(error);
+    }, 0);
+  }, [onRenderError]);
 
   const renderedComponent = useMemo(() => {
     const startTime = performance.now();
@@ -83,12 +91,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
       return <ComponentDemo />;
     } catch (error) {
       const err = error as Error;
-      setError(err);
-
-      // Schedule error callback for next tick to avoid setState during render
-      setTimeout(() => {
-        onRenderError?.(err);
-      }, 0);
+      handleRenderError(err);
 
       return (
         <Alert variant="destructive">
@@ -104,24 +107,24 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
         </Alert>
       );
     }
-  }, [code, onRenderError]);
+  }, [code, handleRenderError]);
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     setRenderCount(0);
     setError(null);
     setLastRenderTime(0);
-  };
+  }, []);
 
-  const handleSettingChange = (key: keyof PreviewSettings, value: boolean) => {
+  const handleSettingChange = useCallback((key: keyof PreviewSettings, value: boolean) => {
     setSettings(prev => ({ ...prev, [key]: value }));
-  };
+  }, []);
 
-  const getGridBackground = () => {
+  const getGridBackground = useCallback(() => {
     if (!settings.showGrid) return '';
     return 'bg-[radial-gradient(circle,_#e5e7eb_1px,_transparent_1px)] [background-size:16px_16px]';
-  };
+  }, [settings.showGrid]);
 
-  const getPreviewClasses = () => {
+  const getPreviewClasses = useMemo(() => {
     const baseClasses = [
       'p-8 border rounded-md min-h-[200px] transition-all duration-300',
       settings.centerContent ? 'flex items-center justify-center' : 'flex',
@@ -131,18 +134,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
     ];
 
     return baseClasses.filter(Boolean).join(' ');
-  };
-
-  useEffect(() => {
-    if (error && onRenderError) {
-      // Use setTimeout to avoid setState during render
-      const timeoutId = setTimeout(() => {
-        onRenderError(error);
-      }, 0);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [error, onRenderError]);
+  }, [settings, getGridBackground]);
 
   return (
     <div className="space-y-4">
@@ -188,7 +180,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
             </div>
           </div>
 
-          <div className={getPreviewClasses()}>
+          <div className={getPreviewClasses}>
             {renderedComponent}
           </div>
         </TabsContent>
