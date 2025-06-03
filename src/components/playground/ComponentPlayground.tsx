@@ -1,14 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { RotateCcw, Play, Zap } from 'lucide-react';
+import { RotateCcw, Play, Zap, Star } from 'lucide-react';
 import { LazyCodeEditor } from './LazyCodeEditor';
 import { EnhancedLivePreview } from './EnhancedLivePreview';
 import { AdvancedPropsConfigurator } from './AdvancedPropsConfigurator';
 import { EnhancedCodeEditor } from './EnhancedCodeEditor';
+import { ComponentVariations } from './ComponentVariations';
+import { CodeGenerator } from './CodeGenerator';
+import { ResponsivePreview } from './ResponsivePreview';
 import { ErrorBoundary, ComponentErrorBoundary } from '@/components/error/ErrorBoundary';
 import { EnhancedCopyButton } from '@/components/ui/enhanced-copy';
 import { ComponentPlaygroundSkeleton } from '@/components/ui/skeleton-loaders';
@@ -16,6 +18,7 @@ import { usePlaygroundShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { usePerformanceMonitor } from '@/hooks/usePerformance';
 import { useFocusManagement } from '@/hooks/useFocusManagement';
 import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
+import { useComponentVariations } from '@/hooks/useComponentVariations';
 import { toast } from '@/hooks/use-toast';
 
 interface ComponentPlaygroundProps {
@@ -90,6 +93,15 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
   const [renderErrors, setRenderErrors] = useState<Error[]>([]);
   const [lastExecutionTime, setLastExecutionTime] = useState<number>(0);
 
+  // Component variations hook
+  const {
+    variations,
+    activeVariation,
+    setActiveVariation,
+    addCustomVariation,
+    removeVariation
+  } = useComponentVariations(componentType);
+
   const handleCodeChange = (newCode: string | undefined) => {
     if (newCode !== undefined) {
       setCode(newCode);
@@ -147,6 +159,34 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
     announceToScreenReader('Code formatted');
   };
 
+  const handleVariationSelect = (variation: any) => {
+    setProps(variation.props);
+    setActiveVariation(variation.id);
+    const generatedCode = generateCodeFromProps(componentType, variation.props, initialCode);
+    setCode(generatedCode);
+    announceToScreenReader(`Applied ${variation.name} variation`);
+    toast({
+      title: "Variation applied",
+      description: `${variation.name} variation has been applied`,
+    });
+  };
+
+  const handleSaveAsVariation = () => {
+    const name = prompt('Enter variation name:');
+    if (name) {
+      addCustomVariation({
+        name,
+        description: `Custom ${name} variation`,
+        props,
+        category: 'custom'
+      });
+      toast({
+        title: "Variation saved",
+        description: `${name} variation has been saved`,
+      });
+    }
+  };
+
   // Set up keyboard shortcuts
   usePlaygroundShortcuts({
     onRun: handleRun,
@@ -191,6 +231,16 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
               <Button
                 variant="outline"
                 size="sm"
+                onClick={handleSaveAsVariation}
+                className="glass-card"
+                aria-label="Save current configuration as variation"
+              >
+                <Star className="h-4 w-4 mr-2" aria-hidden="true" />
+                Save
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleRun}
                 disabled={isRunning}
                 className="glass-card"
@@ -221,9 +271,11 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="playground" className="w-full">
-            <TabsList className="grid w-full grid-cols-3" role="tablist">
+            <TabsList className="grid w-full grid-cols-5" role="tablist">
               <TabsTrigger value="playground" role="tab">Playground</TabsTrigger>
-              <TabsTrigger value="code" role="tab">Code Editor</TabsTrigger>
+              <TabsTrigger value="variations" role="tab">Variations</TabsTrigger>
+              <TabsTrigger value="responsive" role="tab">Responsive</TabsTrigger>
+              <TabsTrigger value="code" role="tab">Code</TabsTrigger>
               <TabsTrigger value="props" role="tab">Props</TabsTrigger>
             </TabsList>
             
@@ -260,16 +312,50 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
               </div>
             </TabsContent>
             
+            <TabsContent value="variations" role="tabpanel">
+              <ComponentErrorBoundary>
+                <div role="region" aria-label="Component variations">
+                  <ComponentVariations
+                    variations={variations}
+                    activeVariation={activeVariation}
+                    onVariationSelect={handleVariationSelect}
+                    onVariationRemove={removeVariation}
+                  />
+                </div>
+              </ComponentErrorBoundary>
+            </TabsContent>
+            
+            <TabsContent value="responsive" role="tabpanel">
+              <ComponentErrorBoundary>
+                <div role="region" aria-label="Responsive preview">
+                  <ResponsivePreview componentType={componentType}>
+                    <EnhancedLivePreview 
+                      code={code} 
+                      componentType={componentType}
+                      onError={handleRenderError}
+                    />
+                  </ResponsivePreview>
+                </div>
+              </ComponentErrorBoundary>
+            </TabsContent>
+            
             <TabsContent value="code" role="tabpanel">
               <ComponentErrorBoundary>
-                <div role="region" aria-label="Enhanced code editor">
-                  <EnhancedCodeEditor
-                    value={code}
-                    onChange={handleCodeChange}
-                    height="500px"
-                    onFormat={handleFormat}
-                    onReset={handleReset}
-                  />
+                <div role="region" aria-label="Code generator and export">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <EnhancedCodeEditor
+                      value={code}
+                      onChange={handleCodeChange}
+                      height="500px"
+                      onFormat={handleFormat}
+                      onReset={handleReset}
+                    />
+                    <CodeGenerator
+                      componentType={componentType}
+                      currentProps={props}
+                      currentCode={code}
+                    />
+                  </div>
                 </div>
               </ComponentErrorBoundary>
             </TabsContent>
