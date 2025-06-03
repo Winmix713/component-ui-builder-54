@@ -1,76 +1,90 @@
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
-export interface PlaygroundState {
+interface PlaygroundState {
   code: string;
   props: Record<string, any>;
   isRunning: boolean;
   isLoading: boolean;
   renderErrors: Error[];
-  lastExecutionTime: number;
+  lastExecutionTime: number | null;
+  isEditorReady: boolean;
 }
 
-export const usePlaygroundState = (initialCode: string) => {
-  const [state, setState] = useState<PlaygroundState>({
+interface UsePlaygroundStateProps {
+  componentType: string;
+  initialCode: string;
+}
+
+export const usePlaygroundState = ({ componentType, initialCode }: UsePlaygroundStateProps) => {
+  const [state, setState] = useState<PlaygroundState>(() => ({
     code: initialCode,
     props: {},
     isRunning: false,
     isLoading: false,
     renderErrors: [],
-    lastExecutionTime: 0
-  });
+    lastExecutionTime: null,
+    isEditorReady: false
+  }));
 
-  const updateCode = (newCode: string) => {
-    setState(prev => ({ ...prev, code: newCode }));
-  };
+  const updateCode = useCallback((code: string) => {
+    setState(prev => ({ ...prev, code }));
+  }, []);
 
-  const updateProps = (newProps: Record<string, any>) => {
-    setState(prev => ({ ...prev, props: newProps }));
-  };
+  const updateProps = useCallback((props: Record<string, any>) => {
+    setState(prev => ({ ...prev, props }));
+  }, []);
 
-  const setRunning = (isRunning: boolean) => {
-    setState(prev => ({ ...prev, isRunning }));
-  };
-
-  const setLoading = (isLoading: boolean) => {
-    setState(prev => ({ ...prev, isLoading }));
-  };
-
-  const addRenderError = (error: Error) => {
-    setState(prev => ({ 
-      ...prev, 
-      renderErrors: [...prev.renderErrors, error] 
+  const setRunning = useCallback((isRunning: boolean) => {
+    setState(prev => ({
+      ...prev,
+      isRunning,
+      lastExecutionTime: isRunning ? null : Date.now()
     }));
-  };
+  }, []);
 
-  const clearRenderErrors = () => {
+  const addError = useCallback((error: Error) => {
+    setState(prev => ({
+      ...prev,
+      renderErrors: [...prev.renderErrors, error]
+    }));
+  }, []);
+
+  const clearErrors = useCallback(() => {
     setState(prev => ({ ...prev, renderErrors: [] }));
-  };
+  }, []);
 
-  const setExecutionTime = (time: number) => {
-    setState(prev => ({ ...prev, lastExecutionTime: time }));
-  };
+  const setLoading = useCallback((isLoading: boolean) => {
+    setState(prev => ({ ...prev, isLoading }));
+  }, []);
 
-  const reset = () => {
-    setState({
+  const setEditorReady = useCallback((isEditorReady: boolean) => {
+    setState(prev => ({ ...prev, isEditorReady }));
+  }, []);
+
+  const reset = useCallback(() => {
+    setState(prev => ({
+      ...prev,
       code: initialCode,
       props: {},
-      isRunning: false,
-      isLoading: false,
       renderErrors: [],
-      lastExecutionTime: 0
-    });
-  };
+      isRunning: false
+    }));
+  }, [initialCode]);
 
-  return {
-    state,
+  const actions = useMemo(() => ({
     updateCode,
     updateProps,
     setRunning,
+    addError,
+    clearErrors,
     setLoading,
-    addRenderError,
-    clearRenderErrors,
-    setExecutionTime,
+    setEditorReady,
     reset
+  }), [updateCode, updateProps, setRunning, addError, clearErrors, setLoading, setEditorReady, reset]);
+
+  return {
+    state,
+    ...actions
   };
 };

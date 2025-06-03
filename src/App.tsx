@@ -1,92 +1,66 @@
+import React, { Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
+import { AccessibilityProvider } from '@/components/accessibility/AccessibilityProvider';
+import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { Layout } from '@/components/layout/Layout';
+import { Toaster } from '@/components/ui/toaster';
+import { ComponentPlaygroundSkeleton } from '@/components/ui/skeleton-loaders';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/theme/ThemeProvider";
-import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
-import { SkipNavigation } from "@/components/accessibility/SkipNavigation";
-import { Layout } from "./components/layout/Layout";
-import { LazyOverview } from "./pages/LazyOverview";
-import { LazyComponentPage } from "./pages/LazyComponentPage";
-import { LazyDocsPage } from "./pages/LazyDocsPage";
-import NotFound from "./pages/NotFound";
-import { useWebVitals } from "./hooks/usePerformance";
-import { AnalyticsProvider } from "./components/analytics/AnalyticsProvider";
-import { usePageAnalytics } from "./hooks/usePageAnalytics";
-import { usePWA } from "./hooks/usePWA";
+// Lazy load pages for better performance
+const LazyOverview = React.lazy(() => import('@/pages/LazyOverview'));
+const LazyComponentPage = React.lazy(() => import('@/pages/LazyComponentPage'));
+const LazyDocsPage = React.lazy(() => import('@/pages/LazyDocsPage'));
+const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
+// Create a stable query client instance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 30, // 30 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
   },
 });
 
-const AppContent = () => {
-  useWebVitals();
-  const { isInstallable, installApp } = usePWA();
+const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <AccessibilityProvider>
+        <AnalyticsProvider>
+          {children}
+        </AnalyticsProvider>
+      </AccessibilityProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
+);
 
+const AppRoutes: React.FC = () => (
+  <Suspense fallback={<ComponentPlaygroundSkeleton />}>
+    <Routes>
+      <Route path="/" element={<LazyOverview />} />
+      <Route path="/components/:component" element={<LazyComponentPage />} />
+      <Route path="/docs" element={<LazyDocsPage />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </Suspense>
+);
+
+const App: React.FC = () => {
   return (
-    <>
-      <SkipNavigation />
-      <Toaster />
-      <Sonner />
-      {isInstallable && (
-        <div className="fixed bottom-4 right-4 z-50">
-          <button
-            onClick={installApp}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg"
-          >
-            Install App
-          </button>
-        </div>
-      )}
-      <BrowserRouter>
-        <RouterContent />
-      </BrowserRouter>
-    </>
-  );
-};
-
-const RouterContent = () => {
-  usePageAnalytics();
-
-  return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<LazyOverview />} />
-        <Route path="/installation" element={<LazyDocsPage />} />
-        <Route path="/theming" element={<LazyDocsPage />} />
-        <Route path="/typography" element={<LazyDocsPage />} />
-        <Route path="/components/:component" element={<LazyComponentPage />} />
-        <Route path="/activity" element={<LazyDocsPage />} />
-        <Route path="/settings" element={<LazyDocsPage />} />
-        <Route path="/collaborators" element={<LazyDocsPage />} />
-        <Route path="/notifications" element={<LazyDocsPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Layout>
-  );
-};
-
-const App = () => {
-  
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AnalyticsProvider trackingId={import.meta.env.VITE_GA_TRACKING_ID}>
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-          <AccessibilityProvider>
-            <TooltipProvider>
-              <AppContent />
-            </TooltipProvider>
-          </AccessibilityProvider>
-        </ThemeProvider>
-      </AnalyticsProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <AppProviders>
+        <Router>
+          <Layout>
+            <AppRoutes />
+          </Layout>
+          <Toaster />
+        </Router>
+      </AppProviders>
+    </ErrorBoundary>
   );
 };
 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlaygroundHeader } from './PlaygroundHeader';
@@ -17,20 +18,14 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = React.mem
   title, 
   initialCode 
 }) => {
-  const playgroundLogic = usePlaygroundLogic({ componentType, title, initialCode });
   const {
-    code,
-    props,
-    isRunning,
-    errors,
-    isEditorReady,
-    updateCode,
-    updateProps,
-    addError,
-    clearErrors,
-    setRunning,
-    setEditorReady
-  } = playgroundLogic;
+    state,
+    handlers,
+    variations,
+    activeVariation,
+    variationHandlers,
+    containerRef
+  } = usePlaygroundLogic({ componentType, title, initialCode });
 
   if (state.isLoading) {
     console.log('ComponentPlayground: Showing loading skeleton');
@@ -78,3 +73,5 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = React.mem
     </ErrorBoundary>
   );
 });
+
+ComponentPlayground.displayName = 'ComponentPlayground';
