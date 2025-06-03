@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
+import { Search, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -81,6 +82,14 @@ const navigationSections = [
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    "Getting Started": true,
+    "Layout": true,
+    "Forms": false,
+    "Navigation": false,
+    "Data Display": false,
+    "Feedback": false
+  });
   const location = useLocation();
 
   const filteredSections = navigationSections.map(section => ({
@@ -88,12 +97,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     items: section.items.filter(item =>
       item.title.toLowerCase().includes(searchQuery.toLowerCase())
     )
-  })).filter(section => section.items.length > 0);
+  })).filter(section => section.items.length > 0 || searchQuery === '');
 
   const isActiveLink = (href: string) => location.pathname === href;
 
+  const toggleSection = (sectionTitle: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionTitle]: !prev[sectionTitle]
+    }));
+  };
+
   return (
-    <aside className={`fixed inset-y-0 left-0 z-50 w-72 glass-card border-r border-border/20 transition-transform duration-200 ease-in-out ${
+    <aside className={`fixed inset-y-0 left-0 z-50 w-72 glass-card border-r border-border/20 transition-transform duration-200 ease-in-out backdrop-blur-md ${
       isOpen ? 'translate-x-0' : '-translate-x-full'
     } lg:translate-x-0`}>
       <div className="flex flex-col h-full">
@@ -120,7 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="pl-9 bg-white/5 border-white/10 focus:border-primary/50 backdrop-blur-sm"
+              className="pl-9 bg-white/5 border-white/10 focus:border-primary/50 backdrop-blur-sm glass-card"
               placeholder="Search components..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -132,24 +148,35 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto sidebar-scrollbar">
           {filteredSections.map((section) => (
             <div key={section.title} className="space-y-1">
-              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                {section.title}
-              </h4>
-              <ul className="space-y-1">
-                {section.items.map((item) => (
-                  <li key={item.href}>
-                    <Link to={item.href}>
-                      <span className={`flex items-center px-3 py-2 text-sm rounded-md transition-all duration-200 cursor-pointer ${
-                        isActiveLink(item.href)
-                          ? 'bg-primary/20 text-primary font-medium border border-primary/30 shadow-lg shadow-primary/20'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
-                      }`}>
-                        {item.title}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <button
+                onClick={() => toggleSection(section.title)}
+                className="flex items-center justify-between w-full text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 hover:text-foreground transition-colors"
+              >
+                <span>{section.title}</span>
+                {expandedSections[section.title] ? (
+                  <ChevronDown className="h-3 w-3" />
+                ) : (
+                  <ChevronRight className="h-3 w-3" />
+                )}
+              </button>
+              
+              {expandedSections[section.title] && (
+                <ul className="space-y-1 pl-2">
+                  {section.items.map((item) => (
+                    <li key={item.href}>
+                      <Link to={item.href}>
+                        <span className={`flex items-center px-3 py-2 text-sm rounded-md transition-all duration-200 cursor-pointer ${
+                          isActiveLink(item.href)
+                            ? 'bg-primary/20 text-primary font-medium border border-primary/30 shadow-lg shadow-primary/20 glow-text'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                        }`}>
+                          {item.title}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
         </nav>
