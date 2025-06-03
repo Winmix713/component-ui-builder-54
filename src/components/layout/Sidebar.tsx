@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { EnhancedSearch } from '@/components/search/EnhancedSearch';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -81,7 +80,6 @@ const navigationSections = [
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     "Getting Started": true,
     "Layout": true,
@@ -91,13 +89,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     "Feedback": false
   });
   const location = useLocation();
-
-  const filteredSections = navigationSections.map(section => ({
-    ...section,
-    items: section.items.filter(item =>
-      item.title.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  })).filter(section => section.items.length > 0 || searchQuery === '');
 
   const isActiveLink = (href: string) => location.pathname === href;
 
@@ -133,20 +124,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Search */}
         <div className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              className="pl-9 bg-white/5 border-white/10 focus:border-primary/50 backdrop-blur-sm glass-card"
-              placeholder="Search components..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+          <EnhancedSearch placeholder="Search components..." />
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto sidebar-scrollbar">
-          {filteredSections.map((section) => (
+          {navigationSections.map((section) => (
             <div key={section.title} className="space-y-1">
               <button
                 onClick={() => toggleSection(section.title)}

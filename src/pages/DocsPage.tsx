@@ -1,10 +1,12 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLocation } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
+import { BreadcrumbNavigation } from '@/components/navigation/BreadcrumbNavigation';
 
 export const DocsPage: React.FC = () => {
-  const { page } = useParams<{ page: string }>();
+  const location = useLocation();
+  const page = location.pathname.slice(1); // Remove leading slash
   
   const pageTitle = page
     ? page.charAt(0).toUpperCase() + page.slice(1)
@@ -75,6 +77,8 @@ export const DocsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <BreadcrumbNavigation />
+      
       <div>
         <h1 className="text-3xl font-bold tracking-tight">{pageContent.title}</h1>
         <p className="text-muted-foreground mt-2">{pageContent.description}</p>

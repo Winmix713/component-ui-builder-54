@@ -3,6 +3,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { EnhancedSearch } from '@/components/search/EnhancedSearch';
 
 interface TopNavigationProps {
   onMenuClick: () => void;
@@ -19,7 +21,7 @@ const navigationItems = [
 export const TopNavigation: React.FC<TopNavigationProps> = ({ onMenuClick }) => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/20 glass-card backdrop-blur-md">
-      <div className="flex h-14 items-center px-6">
+      <div className="flex h-14 items-center px-6 gap-4">
         <Button
           variant="ghost"
           size="sm"
@@ -40,7 +42,9 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ onMenuClick }) => 
         </nav>
 
         <div className="ml-auto flex items-center space-x-4">
-          <span className="text-sm text-muted-foreground">View feedback</span>
+          <EnhancedSearch className="hidden md:flex" />
+          <ThemeToggle />
+          <span className="text-sm text-muted-foreground hidden lg:block">View feedback</span>
           <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
             <Copy className="h-4 w-4 mr-2" />
             Copy
