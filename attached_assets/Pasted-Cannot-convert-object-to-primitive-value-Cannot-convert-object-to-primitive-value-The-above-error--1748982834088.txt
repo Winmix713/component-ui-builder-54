@@ -1,0 +1,29 @@
+Cannot convert object to primitive value
+Cannot convert object to primitive value
+The above error occurred in one of your React components:
+
+    at Lazy
+    at RenderedRoute (https://5e39192a-52a5-49ad-b1c8-068b09a59974-00-pmuy4cj9guxu.riker.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=fb9fd7c3:4092:5)
+    at Routes (https://5e39192a-52a5-49ad-b1c8-068b09a59974-00-pmuy4cj9guxu.riker.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=fb9fd7c3:4531:5)
+    at Suspense
+    at AppRoutes
+    at div
+    at main
+    at div
+    at div
+    at Layout (https://5e39192a-52a5-49ad-b1c8-068b09a59974-00-pmuy4cj9guxu.riker.replit.dev/src/components/layout/Layout.tsx:26:26)
+    at Router (https://5e39192a-52a5-49ad-b1c8-068b09a59974-00-pmuy4cj9guxu.riker.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=fb9fd7c3:4474:15)
+    at BrowserRouter (https://5e39192a-52a5-49ad-b1c8-068b09a59974-00-pmuy4cj9guxu.riker.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=fb9fd7c3:5219:5)
+    at AnalyticsProvider (https://5e39192a-52a5-49ad-b1c8-068b09a59974-00-pmuy4cj9guxu.riker.replit.dev/src/components/analytics/AnalyticsProvider.tsx:24:37)
+    at AccessibilityProvider (https://5e39192a-52a5-49ad-b1c8-068b09a59974-00-pmuy4cj9guxu.riker.replit.dev/src/components/accessibility/AccessibilityProvider.tsx:33:41)
+    at ThemeProvider (https://5e39192a-52a5-49ad-b1c8-068b09a59974-00-pmuy4cj9guxu.riker.replit.dev/src/components/theme/ThemeProvider.tsx:28:33)
+    at QueryClientProvider (https://5e39192a-52a5-49ad-b1c8-068b09a59974-00-pmuy4cj9guxu.riker.replit.dev/node_modules/.vite/deps/@tanstack_react-query.js?v=ff71e4ff:2726:3)
+    at AppProviders (https://5e39192a-52a5-49ad-b1c8-068b09a59974-00-pmuy4cj9guxu.riker.replit.dev/src/App.tsx:50:25)
+    at ErrorBoundary (https://5e39192a-52a5-49ad-b1c8-068b09a59974-00-pmuy4cj9guxu.riker.replit.dev/src/components/error/ErrorBoundary.tsx:217:9)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+ErrorBoundary caught an error: 
+TypeError {}
+ 
+Object {componentStack: "↵    at Lazy↵    at RenderedRoute…"}
