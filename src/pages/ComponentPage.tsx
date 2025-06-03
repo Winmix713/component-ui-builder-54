@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { BreadcrumbNavigation } from '@/components/navigation/BreadcrumbNavigation';
@@ -5,7 +6,7 @@ import { ComponentPlayground } from '@/components/playground/ComponentPlayground
 import { ComponentPageSkeleton } from '@/components/ui/skeleton-loaders';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 
-export const ComponentPage: React.FC = () => {
+const ComponentPage: React.FC = () => {
   const { component } = useParams<{ component: string }>();
   const [isLoading, setIsLoading] = useState(true);
   
@@ -88,3 +89,5 @@ export const ComponentPage: React.FC = () => {
     </ErrorBoundary>
   );
 };
+
+export default ComponentPage;

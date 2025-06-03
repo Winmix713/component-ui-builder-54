@@ -1,3 +1,4 @@
+
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -9,10 +10,10 @@ import { Layout } from '@/components/layout/Layout';
 import { Toaster } from '@/components/ui/toaster';
 import { ComponentPlaygroundSkeleton } from '@/components/ui/skeleton-loaders';
 
-// Lazy load pages for better performance
-const LazyOverview = React.lazy(() => import('@/pages/LazyOverview'));
-const LazyComponentPage = React.lazy(() => import('@/pages/LazyComponentPage'));
-const LazyDocsPage = React.lazy(() => import('@/pages/LazyDocsPage'));
+// Direct lazy loading without custom wrapper
+const Overview = React.lazy(() => import('@/pages/Overview'));
+const ComponentPage = React.lazy(() => import('@/pages/ComponentPage'));
+const DocsPage = React.lazy(() => import('@/pages/DocsPage'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
 // Create a stable query client instance
@@ -41,9 +42,9 @@ const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const AppRoutes: React.FC = () => (
   <Suspense fallback={<ComponentPlaygroundSkeleton />}>
     <Routes>
-      <Route path="/" element={<LazyOverview />} />
-      <Route path="/components/:component" element={<LazyComponentPage />} />
-      <Route path="/docs" element={<LazyDocsPage />} />
+      <Route path="/" element={<Overview />} />
+      <Route path="/components/:component" element={<ComponentPage />} />
+      <Route path="/docs" element={<DocsPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </Suspense>

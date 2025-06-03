@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { BreadcrumbNavigation } from '@/components/navigation/BreadcrumbNavigation';
 
-export const DocsPage: React.FC = () => {
+const DocsPage: React.FC = () => {
   const location = useLocation();
   const page = location.pathname.slice(1); // Remove leading slash
   
@@ -92,3 +92,5 @@ export const DocsPage: React.FC = () => {
     </div>
   );
 };
+
+export default DocsPage;
