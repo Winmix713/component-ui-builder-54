@@ -1,12 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { RotateCcw, Play } from 'lucide-react';
+import { RotateCcw, Play, Zap } from 'lucide-react';
 import { LazyCodeEditor } from './LazyCodeEditor';
-import { LivePreview } from './LivePreview';
-import { PropsConfigurator } from './PropsConfigurator';
+import { EnhancedLivePreview } from './EnhancedLivePreview';
+import { AdvancedPropsConfigurator } from './AdvancedPropsConfigurator';
+import { EnhancedCodeEditor } from './EnhancedCodeEditor';
 import { ErrorBoundary, ComponentErrorBoundary } from '@/components/error/ErrorBoundary';
 import { EnhancedCopyButton } from '@/components/ui/enhanced-copy';
 import { ComponentPlaygroundSkeleton } from '@/components/ui/skeleton-loaders';
@@ -85,6 +87,8 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
   const [props, setProps] = useState<Record<string, any>>({});
   const [isRunning, setIsRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [renderErrors, setRenderErrors] = useState<Error[]>([]);
+  const [lastExecutionTime, setLastExecutionTime] = useState<number>(0);
 
   const handleCodeChange = (newCode: string | undefined) => {
     if (newCode !== undefined) {
@@ -103,6 +107,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
   const handleReset = () => {
     setCode(initialCode);
     setProps({});
+    setRenderErrors([]);
     announceToScreenReader('Playground reset to initial state');
     toast({
       title: "Reset successful",
@@ -111,9 +116,14 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
   };
 
   const handleRun = () => {
+    const startTime = performance.now();
     setIsRunning(true);
+    setRenderErrors([]);
     announceToScreenReader('Running component code');
+    
     setTimeout(() => {
+      const endTime = performance.now();
+      setLastExecutionTime(endTime - startTime);
       setIsRunning(false);
       announceToScreenReader('Component code execution completed');
     }, 500);
@@ -121,6 +131,20 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
 
   const handleCopy = () => {
     announceToScreenReader('Code copied to clipboard');
+  };
+
+  const handleRenderError = (error: Error) => {
+    setRenderErrors(prev => [...prev, error]);
+  };
+
+  const handleFormat = () => {
+    // Simple code formatting (in a real implementation, you'd use a proper formatter)
+    const formatted = code
+      .split('\n')
+      .map(line => line.trim())
+      .join('\n');
+    setCode(formatted);
+    announceToScreenReader('Code formatted');
   };
 
   // Set up keyboard shortcuts
@@ -146,13 +170,24 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <CardTitle className="text-lg" id="playground-title">
-                Interactive Playground
+                Enhanced Playground
               </CardTitle>
               <Badge variant="secondary" className="glass-card" aria-describedby="playground-title">
                 {title}
               </Badge>
+              {renderErrors.length > 0 && (
+                <Badge variant="destructive" className="text-xs">
+                  {renderErrors.length} Error{renderErrors.length > 1 ? 's' : ''}
+                </Badge>
+              )}
             </div>
             <div className="flex items-center space-x-2" role="toolbar" aria-label="Playground actions">
+              {lastExecutionTime > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  <Zap className="h-3 w-3 mr-1" />
+                  {lastExecutionTime.toFixed(2)}ms
+                </Badge>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -188,7 +223,7 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
           <Tabs defaultValue="playground" className="w-full">
             <TabsList className="grid w-full grid-cols-3" role="tablist">
               <TabsTrigger value="playground" role="tab">Playground</TabsTrigger>
-              <TabsTrigger value="code" role="tab">Code</TabsTrigger>
+              <TabsTrigger value="code" role="tab">Code Editor</TabsTrigger>
               <TabsTrigger value="props" role="tab">Props</TabsTrigger>
             </TabsList>
             
@@ -214,7 +249,11 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
                   </h3>
                   <ComponentErrorBoundary>
                     <div role="region" aria-labelledby="live-preview-label">
-                      <LivePreview code={code} componentType={componentType} />
+                      <EnhancedLivePreview 
+                        code={code} 
+                        componentType={componentType}
+                        onError={handleRenderError}
+                      />
                     </div>
                   </ComponentErrorBoundary>
                 </div>
@@ -223,11 +262,13 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
             
             <TabsContent value="code" role="tabpanel">
               <ComponentErrorBoundary>
-                <div role="region" aria-label="Full code editor">
-                  <LazyCodeEditor
+                <div role="region" aria-label="Enhanced code editor">
+                  <EnhancedCodeEditor
                     value={code}
                     onChange={handleCodeChange}
                     height="500px"
+                    onFormat={handleFormat}
+                    onReset={handleReset}
                   />
                 </div>
               </ComponentErrorBoundary>
@@ -235,11 +276,12 @@ export const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
             
             <TabsContent value="props" role="tabpanel">
               <ComponentErrorBoundary>
-                <div role="region" aria-label="Component properties configurator">
-                  <PropsConfigurator
+                <div role="region" aria-label="Advanced component properties configurator">
+                  <AdvancedPropsConfigurator
                     componentType={componentType}
                     onPropsChange={handlePropsChange}
                     currentProps={props}
+                    onReset={() => setProps({})}
                   />
                 </div>
               </ComponentErrorBoundary>
