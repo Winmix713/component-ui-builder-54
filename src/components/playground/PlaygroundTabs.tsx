@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LazyCodeEditor } from './LazyCodeEditor';
 import { EnhancedLivePreview } from './EnhancedLivePreview';
@@ -9,6 +9,7 @@ import { ComponentVariations } from './ComponentVariations';
 import { CodeGenerator } from './CodeGenerator';
 import { ResponsivePreview } from './ResponsivePreview';
 import { ComponentErrorBoundary } from '@/components/error/ErrorBoundary';
+import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
 
 interface PlaygroundTabsProps {
   code: string;
@@ -39,86 +40,171 @@ export const PlaygroundTabs: React.FC<PlaygroundTabsProps> = React.memo(({
   onFormat,
   onReset
 }) => {
+  const { announceToScreenReader } = useAccessibility();
+
+  const handleTabChange = useCallback((value: string) => {
+    const tabNames = {
+      preview: 'Live Preview',
+      code: 'Code Editor',
+      props: 'Properties Configurator',
+      variations: 'Component Variations',
+      responsive: 'Responsive Preview'
+    };
+    announceToScreenReader(`Switched to ${tabNames[value as keyof typeof tabNames]} tab`);
+  }, [announceToScreenReader]);
+
+  const handleKeyboardShortcuts = useCallback((e: React.KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key) {
+        case '1':
+          e.preventDefault();
+          document.querySelector('[data-tab="preview"]')?.click();
+          break;
+        case '2':
+          e.preventDefault();
+          document.querySelector('[data-tab="code"]')?.click();
+          break;
+        case '3':
+          e.preventDefault();
+          document.querySelector('[data-tab="props"]')?.click();
+          break;
+        case '4':
+          e.preventDefault();
+          document.querySelector('[data-tab="variations"]')?.click();
+          break;
+        case '5':
+          e.preventDefault();
+          document.querySelector('[data-tab="responsive"]')?.click();
+          break;
+      }
+    }
+  }, []);
+
   return (
-    <Tabs defaultValue="preview" className="w-full">
-      <TabsList className="grid w-full grid-cols-5">
-        <TabsTrigger value="preview">Preview</TabsTrigger>
-        <TabsTrigger value="code">Code</TabsTrigger>
-        <TabsTrigger value="props">Props</TabsTrigger>
-        <TabsTrigger value="variations">Variations</TabsTrigger>
-        <TabsTrigger value="responsive">Responsive</TabsTrigger>
-      </TabsList>
+    <div onKeyDown={handleKeyboardShortcuts} role="region" aria-label="Component playground tabs">
+      <Tabs defaultValue="preview" className="w-full" onValueChange={handleTabChange}>
+        <TabsList className="grid w-full grid-cols-5" role="tablist">
+          <TabsTrigger 
+            value="preview" 
+            data-tab="preview"
+            aria-label="Live Preview (Ctrl+1)"
+            title="Ctrl+1"
+          >
+            Preview
+          </TabsTrigger>
+          <TabsTrigger 
+            value="code" 
+            data-tab="code"
+            aria-label="Code Editor (Ctrl+2)"
+            title="Ctrl+2"
+          >
+            Code
+          </TabsTrigger>
+          <TabsTrigger 
+            value="props" 
+            data-tab="props"
+            aria-label="Properties (Ctrl+3)"
+            title="Ctrl+3"
+          >
+            Props
+          </TabsTrigger>
+          <TabsTrigger 
+            value="variations" 
+            data-tab="variations"
+            aria-label="Variations (Ctrl+4)"
+            title="Ctrl+4"
+          >
+            Variations
+          </TabsTrigger>
+          <TabsTrigger 
+            value="responsive" 
+            data-tab="responsive"
+            aria-label="Responsive (Ctrl+5)"
+            title="Ctrl+5"
+          >
+            Responsive
+          </TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="preview" role="tabpanel">
-        <ComponentErrorBoundary>
-          <div role="region" aria-label="Live component preview">
-            <EnhancedLivePreview
-              code={code}
-              componentType={componentType}
-              onRenderError={onRenderError}
-            />
-          </div>
-        </ComponentErrorBoundary>
-      </TabsContent>
-
-      <TabsContent value="code" role="tabpanel">
-        <ComponentErrorBoundary>
-          <div role="region" aria-label="Code generator and export">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              <EnhancedCodeEditor
-                value={code}
-                onChange={onCodeChange}
-                height="500px"
-                onFormat={onFormat}
-                onReset={onReset}
-              />
-              <CodeGenerator
+        <TabsContent value="preview" role="tabpanel" aria-labelledby="tab-preview">
+          <ComponentErrorBoundary>
+            <div role="region" aria-label="Live component preview" aria-live="polite">
+              <EnhancedLivePreview
+                code={code}
                 componentType={componentType}
-                currentProps={props}
-                currentCode={code}
+                onRenderError={onRenderError}
               />
             </div>
-          </div>
-        </ComponentErrorBoundary>
-      </TabsContent>
+          </ComponentErrorBoundary>
+        </TabsContent>
 
-      <TabsContent value="props" role="tabpanel">
-        <ComponentErrorBoundary>
-          <div role="region" aria-label="Advanced component properties configurator">
-            <AdvancedPropsConfigurator
-              componentType={componentType}
-              onPropsChange={onPropsChange}
-              currentProps={props}
-              onReset={() => onPropsChange({})}
-            />
-          </div>
-        </ComponentErrorBoundary>
-      </TabsContent>
+        <TabsContent value="code" role="tabpanel" aria-labelledby="tab-code">
+          <ComponentErrorBoundary>
+            <div role="region" aria-label="Code generator and export">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <div aria-label="Code editor">
+                  <EnhancedCodeEditor
+                    value={code}
+                    onChange={onCodeChange}
+                    height="500px"
+                    onFormat={onFormat}
+                    onReset={onReset}
+                  />
+                </div>
+                <div aria-label="Code generator">
+                  <CodeGenerator
+                    componentType={componentType}
+                    currentProps={props}
+                    currentCode={code}
+                  />
+                </div>
+              </div>
+            </div>
+          </ComponentErrorBoundary>
+        </TabsContent>
 
-      <TabsContent value="variations" role="tabpanel">
-        <ComponentErrorBoundary>
-          <div role="region" aria-label="Component variations and presets">
-            <ComponentVariations
-              variations={variations}
-              activeVariation={activeVariation}
-              onVariationSelect={onVariationSelect}
-              onVariationRemove={onVariationRemove}
-            />
-          </div>
-        </ComponentErrorBoundary>
-      </TabsContent>
+        <TabsContent value="props" role="tabpanel" aria-labelledby="tab-props">
+          <ComponentErrorBoundary>
+            <div role="region" aria-label="Advanced component properties configurator">
+              <AdvancedPropsConfigurator
+                componentType={componentType}
+                onPropsChange={onPropsChange}
+                currentProps={props}
+                onReset={() => onPropsChange({})}
+              />
+            </div>
+          </ComponentErrorBoundary>
+        </TabsContent>
 
-      <TabsContent value="responsive" role="tabpanel">
-        <ComponentErrorBoundary>
-          <div role="region" aria-label="Responsive preview across different screen sizes">
-            <ResponsivePreview
-              code={code}
-              componentType={componentType}
-            />
-          </div>
-        </ComponentErrorBoundary>
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="variations" role="tabpanel" aria-labelledby="tab-variations">
+          <ComponentErrorBoundary>
+            <div role="region" aria-label="Component variations and presets">
+              <ComponentVariations
+                variations={variations}
+                activeVariation={activeVariation}
+                onVariationSelect={onVariationSelect}
+                onVariationRemove={onVariationRemove}
+              />
+            </div>
+          </ComponentErrorBoundary>
+        </TabsContent>
+
+        <TabsContent value="responsive" role="tabpanel" aria-labelledby="tab-responsive">
+          <ComponentErrorBoundary>
+            <div role="region" aria-label="Responsive preview across different screen sizes">
+              <ResponsivePreview
+                code={code}
+                componentType={componentType}
+              />
+            </div>
+          </ComponentErrorBoundary>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="sr-only" aria-live="polite" id="keyboard-shortcuts-help">
+        Use Ctrl+1 through Ctrl+5 to quickly switch between tabs
+      </div>
+    </div>
   );
 });
 

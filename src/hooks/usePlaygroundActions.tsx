@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
 import { toast } from '@/hooks/use-toast';
 import { generateCodeFromProps } from '@/utils/codeGeneration';
@@ -31,50 +31,64 @@ export const usePlaygroundActions = ({
 }: UsePlaygroundActionsProps) => {
   const { announceToScreenReader } = useAccessibility();
 
+  // Memoize stable values to prevent unnecessary re-renders
+  const stableActions = useMemo(() => ({
+    componentType,
+    initialCode,
+    updateCode,
+    updateProps,
+    setRunning,
+    addError,
+    clearErrors,
+    announceToScreenReader
+  }), [componentType, initialCode, updateCode, updateProps, setRunning, addError, clearErrors, announceToScreenReader]);
+
   const handleCodeChange = useCallback((newCode: string | undefined) => {
-    if (newCode !== undefined) {
-      updateCode(newCode);
-      announceToScreenReader('Code updated');
+    if (newCode !== undefined && newCode !== state.code) {
+      stableActions.updateCode(newCode);
+      stableActions.announceToScreenReader('Code updated');
     }
-  }, [updateCode, announceToScreenReader]);
+  }, [state.code, stableActions]);
 
   const handlePropsChange = useCallback((newProps: Record<string, any>) => {
-    updateProps(newProps);
-    const generatedCode = generateCodeFromProps(componentType, newProps, initialCode);
-    updateCode(generatedCode);
-    announceToScreenReader('Component props updated');
-  }, [componentType, initialCode, updateCode, updateProps, announceToScreenReader]);
+    if (JSON.stringify(newProps) !== JSON.stringify(state.props)) {
+      stableActions.updateProps(newProps);
+      const generatedCode = generateCodeFromProps(stableActions.componentType, newProps, stableActions.initialCode);
+      stableActions.updateCode(generatedCode);
+      stableActions.announceToScreenReader('Component props updated');
+    }
+  }, [state.props, stableActions]);
 
   const handleReset = useCallback(() => {
-    updateCode(initialCode);
-    updateProps({});
-    clearErrors();
-    announceToScreenReader('Playground reset to initial state');
+    stableActions.updateCode(stableActions.initialCode);
+    stableActions.updateProps({});
+    stableActions.clearErrors();
+    stableActions.announceToScreenReader('Playground reset to initial state');
     toast({
       title: "Reset successful",
       description: "Playground has been reset to initial state",
     });
-  }, [initialCode, updateCode, updateProps, clearErrors, announceToScreenReader]);
+  }, [stableActions]);
 
   const handleRun = useCallback(() => {
-    setRunning(true);
-    clearErrors();
-    announceToScreenReader('Running component code');
+    stableActions.setRunning(true);
+    stableActions.clearErrors();
+    stableActions.announceToScreenReader('Running component code');
     
     setTimeout(() => {
-      setRunning(false);
-      announceToScreenReader('Component code execution completed');
+      stableActions.setRunning(false);
+      stableActions.announceToScreenReader('Component code execution completed');
     }, 500);
-  }, [setRunning, clearErrors, announceToScreenReader]);
+  }, [stableActions]);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(state.code);
-    announceToScreenReader('Code copied to clipboard');
+    stableActions.announceToScreenReader('Code copied to clipboard');
     toast({
       title: "Code copied",
       description: "Code has been copied to clipboard",
     });
-  }, [state.code, announceToScreenReader]);
+  }, [state.code, stableActions]);
 
   const handleSaveAsVariation = useCallback(() => {
     const name = prompt('Enter variation name:');
@@ -93,41 +107,44 @@ export const usePlaygroundActions = ({
   }, [variationHandlers, state.props]);
 
   const handleVariationSelect = useCallback((variation: any) => {
-    updateProps(variation.props);
-    const generatedCode = generateCodeFromProps(componentType, variation.props, initialCode);
-    updateCode(generatedCode);
-    announceToScreenReader(`Applied ${variation.name} variation`);
+    stableActions.updateProps(variation.props);
+    const generatedCode = generateCodeFromProps(stableActions.componentType, variation.props, stableActions.initialCode);
+    stableActions.updateCode(generatedCode);
+    stableActions.announceToScreenReader(`Applied ${variation.name} variation`);
     toast({
       title: "Variation applied",
       description: `${variation.name} variation has been applied`,
     });
-  }, [componentType, initialCode, updateCode, updateProps, announceToScreenReader]);
+  }, [stableActions]);
 
   const handleRenderError = useCallback((error: Error) => {
-    addError(error);
+    stableActions.addError(error);
     console.error('Render error:', error);
-    announceToScreenReader('Component render error occurred');
-  }, [addError, announceToScreenReader]);
+    stableActions.announceToScreenReader('Component render error occurred');
+  }, [stableActions]);
 
   const handleFormat = useCallback(() => {
-    // Basic code formatting - in a real app, you might use Prettier API
     try {
       const formatted = state.code
         .replace(/;\s*\n/g, ';\n')
         .replace(/{\s*\n/g, '{\n  ')
         .replace(/\n\s*}/g, '\n}');
-      updateCode(formatted);
-      announceToScreenReader('Code formatted');
-      toast({
-        title: "Code formatted",
-        description: "Code has been formatted",
-      });
+      
+      if (formatted !== state.code) {
+        stableActions.updateCode(formatted);
+        stableActions.announceToScreenReader('Code formatted');
+        toast({
+          title: "Code formatted",
+          description: "Code has been formatted",
+        });
+      }
     } catch (error) {
       console.error('Format error:', error);
     }
-  }, [state.code, updateCode, announceToScreenReader]);
+  }, [state.code, stableActions]);
 
-  return {
+  // Return memoized handlers to prevent unnecessary re-renders
+  return useMemo(() => ({
     handleCodeChange,
     handlePropsChange,
     handleReset,
@@ -137,5 +154,15 @@ export const usePlaygroundActions = ({
     handleVariationSelect,
     handleRenderError,
     handleFormat
-  };
+  }), [
+    handleCodeChange,
+    handlePropsChange,
+    handleReset,
+    handleRun,
+    handleCopy,
+    handleSaveAsVariation,
+    handleVariationSelect,
+    handleRenderError,
+    handleFormat
+  ]);
 };
