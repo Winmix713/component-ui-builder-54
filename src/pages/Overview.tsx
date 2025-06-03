@@ -1,12 +1,15 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ComponentCard } from '@/components/overview/ComponentCard';
 import { StatsCard } from '@/components/overview/StatsCard';
+import { InteractiveStatsWidget } from '@/components/overview/InteractiveStatsWidget';
+import { QuickActionsPanel } from '@/components/overview/QuickActionsPanel';
 import { SearchInput } from '@/components/search/SearchInput';
 import { QuickActions } from '@/components/search/QuickActions';
+import { GlobalSearchShortcut } from '@/components/search/GlobalSearchShortcut';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { usePageAnalytics } from '@/hooks/usePageAnalytics';
 import { usePerformanceMonitor } from '@/hooks/usePerformance';
+import { TrendingUp, Users, Code, Zap, Clock, Star } from 'lucide-react';
 
 interface Component {
   id: string;
@@ -86,6 +89,50 @@ const Overview: React.FC = () => {
     }
   };
 
+  // Interactive stats data
+  const interactiveStats = [
+    {
+      title: 'Daily Usage',
+      value: '1.2K',
+      change: 12.5,
+      icon: TrendingUp,
+      description: 'vs last week',
+      actionLabel: 'View Analytics',
+      onAction: () => console.log('Analytics clicked'),
+      progress: 75
+    },
+    {
+      title: 'Active Developers',
+      value: '89',
+      change: 8.2,
+      icon: Users,
+      description: 'this month',
+      actionLabel: 'See Activity',
+      onAction: () => console.log('Activity clicked'),
+      progress: 60
+    },
+    {
+      title: 'Component Health',
+      value: '98%',
+      change: 2.1,
+      icon: Zap,
+      description: 'performance score',
+      actionLabel: 'Run Audit',
+      onAction: () => console.log('Audit clicked'),
+      progress: 98
+    },
+    {
+      title: 'Build Time',
+      value: '2.1s',
+      change: -15.3,
+      icon: Clock,
+      description: 'avg build speed',
+      actionLabel: 'Optimize',
+      onAction: () => console.log('Optimize clicked'),
+      progress: 85
+    }
+  ];
+
   const stats = {
     totalComponents: mockComponents.length,
     categories: [...new Set(mockComponents.map(c => c.category))].length,
@@ -98,7 +145,7 @@ const Overview: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="flex flex-col space-y-4">
           <div>
             <h1 className="text-4xl font-bold tracking-tight">Component Library</h1>
@@ -121,7 +168,17 @@ const Overview: React.FC = () => {
           />
         </div>
 
+        {/* Interactive Stats Widgets */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {interactiveStats.map((stat, index) => (
+            <InteractiveStatsWidget key={index} {...stat} />
+          ))}
+        </div>
+
         <StatsCard stats={stats} />
+
+        {/* Quick Actions Panel */}
+        <QuickActionsPanel />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredComponents.map((component) => (
@@ -147,6 +204,9 @@ const Overview: React.FC = () => {
             </button>
           </div>
         )}
+
+        {/* Global Search Shortcut */}
+        <GlobalSearchShortcut />
       </div>
     </ErrorBoundary>
   );

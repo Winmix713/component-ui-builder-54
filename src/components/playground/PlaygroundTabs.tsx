@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LazyCodeEditor } from './LazyCodeEditor';
@@ -7,6 +6,7 @@ import { AdvancedPropsConfigurator } from './AdvancedPropsConfigurator';
 import { EnhancedCodeEditor } from './EnhancedCodeEditor';
 import { ComponentVariations } from './ComponentVariations';
 import { CodeGenerator } from './CodeGenerator';
+import { CodeTemplatesLibrary } from './CodeTemplatesLibrary';
 import { ResponsivePreview } from './ResponsivePreview';
 import { ComponentErrorBoundary } from '@/components/error/ErrorBoundary';
 import { useAccessibility } from '@/components/accessibility/AccessibilityProvider';
@@ -53,6 +53,7 @@ export const PlaygroundTabs: React.FC<PlaygroundTabsProps> = React.memo(({
     const tabNames = {
       preview: 'Live Preview',
       code: 'Code Editor',
+      templates: 'Templates',
       props: 'Properties Configurator',
       variations: 'Component Variations',
       responsive: 'Responsive Preview'
@@ -73,19 +74,28 @@ export const PlaygroundTabs: React.FC<PlaygroundTabsProps> = React.memo(({
           break;
         case '3':
           e.preventDefault();
-          (document.querySelector('[data-tab="props"]') as HTMLElement)?.click();
+          (document.querySelector('[data-tab="templates"]') as HTMLElement)?.click();
           break;
         case '4':
           e.preventDefault();
-          (document.querySelector('[data-tab="variations"]') as HTMLElement)?.click();
+          (document.querySelector('[data-tab="props"]') as HTMLElement)?.click();
           break;
         case '5':
+          e.preventDefault();
+          (document.querySelector('[data-tab="variations"]') as HTMLElement)?.click();
+          break;
+        case '6':
           e.preventDefault();
           (document.querySelector('[data-tab="responsive"]') as HTMLElement)?.click();
           break;
       }
     }
   }, []);
+
+  const handleTemplateSelect = useCallback((template: any) => {
+    onCodeChange(template.code);
+    announceToScreenReader(`Applied ${template.name} template`);
+  }, [onCodeChange, announceToScreenReader]);
 
   if (isLoading) {
     return <LoadingState variant="skeleton" message="Loading playground..." />;
@@ -95,7 +105,7 @@ export const PlaygroundTabs: React.FC<PlaygroundTabsProps> = React.memo(({
     <FocusManager>
       <div onKeyDown={handleKeyboardShortcuts} role="region" aria-label="Component playground tabs">
         <Tabs defaultValue="preview" className="w-full" onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-5" role="tablist">
+          <TabsList className="grid w-full grid-cols-6" role="tablist">
             <TabsTrigger 
               value="preview" 
               data-tab="preview"
@@ -113,26 +123,34 @@ export const PlaygroundTabs: React.FC<PlaygroundTabsProps> = React.memo(({
               Code
             </TabsTrigger>
             <TabsTrigger 
+              value="templates" 
+              data-tab="templates"
+              aria-label="Templates (Ctrl+3)"
+              title="Ctrl+3"
+            >
+              Templates
+            </TabsTrigger>
+            <TabsTrigger 
               value="props" 
               data-tab="props"
-              aria-label="Properties (Ctrl+3)"
-              title="Ctrl+3"
+              aria-label="Properties (Ctrl+4)"
+              title="Ctrl+4"
             >
               Props
             </TabsTrigger>
             <TabsTrigger 
               value="variations" 
               data-tab="variations"
-              aria-label="Variations (Ctrl+4)"
-              title="Ctrl+4"
+              aria-label="Variations (Ctrl+5)"
+              title="Ctrl+5"
             >
               Variations
             </TabsTrigger>
             <TabsTrigger 
               value="responsive" 
               data-tab="responsive"
-              aria-label="Responsive (Ctrl+5)"
-              title="Ctrl+5"
+              aria-label="Responsive (Ctrl+6)"
+              title="Ctrl+6"
             >
               Responsive
             </TabsTrigger>
@@ -180,6 +198,14 @@ export const PlaygroundTabs: React.FC<PlaygroundTabsProps> = React.memo(({
             </ComponentErrorBoundary>
           </TabsContent>
 
+          <TabsContent value="templates" role="tabpanel" aria-labelledby="tab-templates">
+            <ComponentErrorBoundary>
+              <div role="region" aria-label="Code templates library">
+                <CodeTemplatesLibrary onTemplateSelect={handleTemplateSelect} />
+              </div>
+            </ComponentErrorBoundary>
+          </TabsContent>
+
           <TabsContent value="props" role="tabpanel" aria-labelledby="tab-props">
             <ComponentErrorBoundary>
               <div role="region" aria-label="Advanced component properties configurator">
@@ -223,7 +249,7 @@ export const PlaygroundTabs: React.FC<PlaygroundTabsProps> = React.memo(({
         </Tabs>
         
         <div className="sr-only" aria-live="polite" id="keyboard-shortcuts-help">
-          Use Ctrl+1 through Ctrl+5 to quickly switch between tabs. Press ? for help.
+          Use Ctrl+1 through Ctrl+6 to quickly switch between tabs. Press ? for help.
         </div>
       </div>
     </FocusManager>

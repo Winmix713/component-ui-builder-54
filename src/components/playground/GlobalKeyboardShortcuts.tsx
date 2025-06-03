@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useKeyboardNavigation } from '@/components/accessibility/KeyboardNavigationProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -46,7 +45,7 @@ export const GlobalKeyboardShortcuts: React.FC<GlobalKeyboardShortcutsProps> = (
     
     registerShortcut('Ctrl+?', () => setShowHelp(true), 'Show keyboard shortcuts');
 
-    // Tab navigation shortcuts
+    // Updated tab navigation shortcuts
     registerShortcut('Ctrl+1', () => {
       (document.querySelector('[data-tab="preview"]') as HTMLElement)?.click();
       toast({ description: 'Switched to Preview tab' });
@@ -58,16 +57,21 @@ export const GlobalKeyboardShortcuts: React.FC<GlobalKeyboardShortcutsProps> = (
     }, 'Switch to Code tab');
 
     registerShortcut('Ctrl+3', () => {
+      (document.querySelector('[data-tab="templates"]') as HTMLElement)?.click();
+      toast({ description: 'Switched to Templates tab' });
+    }, 'Switch to Templates tab');
+
+    registerShortcut('Ctrl+4', () => {
       (document.querySelector('[data-tab="props"]') as HTMLElement)?.click();
       toast({ description: 'Switched to Props tab' });
     }, 'Switch to Props tab');
 
-    registerShortcut('Ctrl+4', () => {
+    registerShortcut('Ctrl+5', () => {
       (document.querySelector('[data-tab="variations"]') as HTMLElement)?.click();
       toast({ description: 'Switched to Variations tab' });
     }, 'Switch to Variations tab');
 
-    registerShortcut('Ctrl+5', () => {
+    registerShortcut('Ctrl+6', () => {
       (document.querySelector('[data-tab="responsive"]') as HTMLElement)?.click();
       toast({ description: 'Switched to Responsive tab' });
     }, 'Switch to Responsive tab');
@@ -84,6 +88,7 @@ export const GlobalKeyboardShortcuts: React.FC<GlobalKeyboardShortcutsProps> = (
       unregisterShortcut('Ctrl+3');
       unregisterShortcut('Ctrl+4');
       unregisterShortcut('Ctrl+5');
+      unregisterShortcut('Ctrl+6');
     };
   }, [onRun, onReset, onSave, onFormat, registerShortcut, unregisterShortcut, toast]);
 
@@ -122,6 +127,7 @@ export const GlobalKeyboardShortcuts: React.FC<GlobalKeyboardShortcutsProps> = (
             <li>• Press <kbd>?</kbd> anywhere to see this help</li>
             <li>• Use <kbd>Esc</kbd> to close dialogs</li>
             <li>• Shortcuts work when the playground is focused</li>
+            <li>• <kbd>Ctrl+K</kbd> opens global search from anywhere</li>
           </ul>
         </div>
       </DialogContent>
