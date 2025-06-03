@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Command } from 'lucide-react';
+import { Search, Command, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { SearchResultsSkeleton } from '@/components/ui/skeleton-loaders';
 import { useNavigate } from 'react-router-dom';
 
 interface SearchResult {
@@ -49,6 +49,7 @@ export function EnhancedSearch({ placeholder = "Search components...", className
   const [isOpen, setIsOpen] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -82,11 +83,19 @@ export function EnhancedSearch({ placeholder = "Search components...", className
 
   useEffect(() => {
     if (query) {
-      const searchResults = fuzzySearch(query, searchData);
-      setResults(searchResults);
-      setSelectedIndex(0);
+      setIsSearching(true);
+      // Simulate search delay for better UX
+      const timer = setTimeout(() => {
+        const searchResults = fuzzySearch(query, searchData);
+        setResults(searchResults);
+        setSelectedIndex(0);
+        setIsSearching(false);
+      }, 150);
+
+      return () => clearTimeout(timer);
     } else {
       setResults([]);
+      setIsSearching(false);
     }
   }, [query]);
 
@@ -154,7 +163,11 @@ export function EnhancedSearch({ placeholder = "Search components...", className
           </DialogHeader>
           
           <div className="flex items-center border-b pb-3">
-            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+            {isSearching ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin opacity-50" />
+            ) : (
+              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+            )}
             <Input
               ref={inputRef}
               value={query}
@@ -166,7 +179,9 @@ export function EnhancedSearch({ placeholder = "Search components...", className
             />
           </div>
 
-          {results.length > 0 && (
+          {isSearching ? (
+            <SearchResultsSkeleton />
+          ) : results.length > 0 ? (
             <div className="max-h-80 overflow-y-auto">
               {results.map((result, index) => (
                 <div
@@ -194,13 +209,11 @@ export function EnhancedSearch({ placeholder = "Search components...", className
                 </div>
               ))}
             </div>
-          )}
-
-          {query && results.length === 0 && (
+          ) : query && !isSearching ? (
             <div className="py-6 text-center text-sm text-muted-foreground">
               No results found for "{query}"
             </div>
-          )}
+          ) : null}
 
           <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3">
             <span>Use ↑↓ to navigate, Enter to select, Esc to close</span>

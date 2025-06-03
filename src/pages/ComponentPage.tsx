@@ -1,14 +1,29 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { BreadcrumbNavigation } from '@/components/navigation/BreadcrumbNavigation';
 import { ComponentPlayground } from '@/components/playground/ComponentPlayground';
+import { ComponentPageSkeleton } from '@/components/ui/skeleton-loaders';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 
 export const ComponentPage: React.FC = () => {
   const { component } = useParams<{ component: string }>();
+  const [isLoading, setIsLoading] = useState(true);
   
+  useEffect(() => {
+    // Simulate loading time for better UX
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [component]);
+
   if (!component) {
     return <div>Component not found</div>;
+  }
+
+  if (isLoading) {
+    return <ComponentPageSkeleton />;
   }
 
   const componentTitle = component.charAt(0).toUpperCase() + component.slice(1);
@@ -53,21 +68,23 @@ export const ComponentPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <BreadcrumbNavigation />
-      
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{componentTitle}</h1>
-        <p className="text-muted-foreground mt-2">
-          Interactive playground for the {componentTitle} component
-        </p>
+    <ErrorBoundary>
+      <div className="space-y-6">
+        <BreadcrumbNavigation />
+        
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{componentTitle}</h1>
+          <p className="text-muted-foreground mt-2">
+            Interactive playground for the {componentTitle} component
+          </p>
+        </div>
+        
+        <ComponentPlayground
+          componentType={component}
+          initialCode={getInitialCode(component)}
+          title={componentTitle}
+        />
       </div>
-      
-      <ComponentPlayground
-        componentType={component}
-        initialCode={getInitialCode(component)}
-        title={componentTitle}
-      />
-    </div>
+    </ErrorBoundary>
   );
 };
