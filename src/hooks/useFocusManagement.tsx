@@ -9,7 +9,7 @@ interface FocusManagementOptions {
 
 export const useFocusManagement = (options: FocusManagementOptions = {}) => {
   const { trapFocus = false, restoreFocus = false, autoFocus = false } = options;
-  const containerRef = useRef<HTMLElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<Element | null>(null);
 
   const getFocusableElements = useCallback(() => {

@@ -17,6 +17,7 @@ interface CopyButtonProps {
   showToast?: boolean;
   successMessage?: string;
   className?: string;
+  onCopy?: () => void;
 }
 
 export function CopyButton({ 
@@ -25,7 +26,8 @@ export function CopyButton({
   size = 'sm',
   showToast = true,
   successMessage = 'Copied to clipboard!',
-  className 
+  className,
+  onCopy 
 }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +46,7 @@ export function CopyButton({
         });
       }
       
+      onCopy?.();
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       toast({
@@ -87,6 +90,7 @@ interface EnhancedCopyButtonProps {
   size?: 'default' | 'sm' | 'lg' | 'icon';
   showLanguage?: boolean;
   className?: string;
+  onCopy?: () => void;
 }
 
 export function EnhancedCopyButton({
@@ -95,7 +99,8 @@ export function EnhancedCopyButton({
   variant = 'outline',
   size = 'sm',
   showLanguage = true,
-  className
+  className,
+  onCopy
 }: EnhancedCopyButtonProps) {
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -112,6 +117,7 @@ export function EnhancedCopyButton({
         description: `${language.toUpperCase()} code copied to clipboard`,
       });
       
+      onCopy?.();
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       toast({
