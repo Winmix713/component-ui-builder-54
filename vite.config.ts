@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from "rollup-plugin-visualizer";
-import { ViteImageOptimize } from "@vheemstra/vite-plugin-imagemin";
+import { imagemin } from "@vheemstra/vite-plugin-imagemin";
 
 export default defineConfig(({ mode }) => ({
   server: {
@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    ViteImageOptimize({
+    imagemin({
       gifsicle: { optimizationLevel: 7 },
       mozjpeg: { quality: 80 },
       pngquant: { quality: [0.65, 0.8] },
