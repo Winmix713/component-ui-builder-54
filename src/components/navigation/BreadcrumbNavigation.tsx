@@ -19,7 +19,7 @@ export function BreadcrumbNavigation() {
     <Breadcrumb className="mb-6">
       <BreadcrumbList>
         {breadcrumbs.map((item, index) => (
-          <React.Fragment key={item.label}>
+          <React.Fragment key={`breadcrumb-${index}-${item.label}`}>
             <BreadcrumbItem>
               {item.isCurrentPage ? (
                 <BreadcrumbPage>{item.label}</BreadcrumbPage>
