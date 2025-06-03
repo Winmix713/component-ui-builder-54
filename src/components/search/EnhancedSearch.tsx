@@ -1,185 +1,182 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import React, { useState, useCallback, useMemo } from 'react';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useNavigate } from 'react-router-dom';
+import { Search, Clock, Heart, Filter, Star } from 'lucide-react';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
-import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useFavorites } from '@/hooks/useFavorites';
-import { useSearchLogic } from '@/hooks/useSearchLogic';
-import { SearchTrigger } from './SearchTrigger';
-import { SearchInput } from './SearchInput';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { SearchFilters } from './SearchFilters';
 import { SearchResults } from './SearchResults';
 import { RecentTab } from './RecentTab';
 import { FavoritesTab } from './FavoritesTab';
 import { HistoryTab } from './HistoryTab';
-import { SearchResult } from './SearchData';
 
 interface EnhancedSearchProps {
-  placeholder?: string;
-  className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function EnhancedSearch({ placeholder = "Search components...", className }: EnhancedSearchProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
+  open,
+  onOpenChange
+}) => {
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('search');
-  
-  const navigate = useNavigate();
-  const inputRef = useRef<HTMLInputElement>(null);
-  
-  const { history, addToHistory, clearHistory, removeFromHistory } = useSearchHistory();
-  const { recentItems, clearRecent } = useRecentlyViewed();
-  const { favorites, toggleFavorite, isFavorite } = useFavorites();
-  
-  const {
-    query,
-    setQuery,
-    results,
-    selectedIndex,
-    setSelectedIndex,
-    isSearching,
-    filters,
-    handleFilterToggle,
-    handleClearFilters
-  } = useSearchLogic();
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    category: '',
+    difficulty: '',
+    tags: [] as string[]
+  });
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsOpen(true);
-      }
-      if (e.key === '/') {
-        e.preventDefault();
-        setIsOpen(true);
-      }
-    };
+  const { addSearchTerm, searchHistory } = useSearchHistory();
+  const { favorites, toggleFavorite } = useFavorites();
+  const { recentlyViewed } = useRecentlyViewed();
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const handleSelect = (result: SearchResult) => {
-    navigate(result.href);
-    addToHistory(query, result.category);
-    setIsOpen(false);
-    setQuery('');
-  };
-
-  const handleQuickNavigation = (result: SearchResult) => {
-    window.open(result.href, '_blank');
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex(prev => Math.min(prev + 1, results.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex(prev => Math.max(prev - 1, 0));
-    } else if (e.key === 'Enter' && results[selectedIndex]) {
-      handleSelect(results[selectedIndex]);
-    } else if (e.key === 'Escape') {
-      setIsOpen(false);
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      addSearchTerm(query);
     }
-  };
+  }, [addSearchTerm]);
+
+  const filteredResults = useMemo(() => {
+    // Mock search results - in a real app, this would come from an API
+    const allComponents = [
+      { id: 'button', name: 'Button', category: 'Form', difficulty: 'Easy', tags: ['interactive', 'form'] },
+      { id: 'input', name: 'Input', category: 'Form', difficulty: 'Easy', tags: ['form', 'text'] },
+      { id: 'card', name: 'Card', category: 'Layout', difficulty: 'Easy', tags: ['container', 'layout'] },
+      { id: 'dialog', name: 'Dialog', category: 'Overlay', difficulty: 'Medium', tags: ['modal', 'overlay'] },
+      { id: 'table', name: 'Table', category: 'Data', difficulty: 'Hard', tags: ['data', 'grid'] },
+      { id: 'calendar', name: 'Calendar', category: 'Form', difficulty: 'Hard', tags: ['date', 'picker'] }
+    ];
+
+    return allComponents.filter(component => {
+      const matchesQuery = !searchQuery || 
+        component.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        component.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        component.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchesCategory = !filters.category || component.category === filters.category;
+      const matchesDifficulty = !filters.difficulty || component.difficulty === filters.difficulty;
+      const matchesTags = filters.tags.length === 0 || 
+        filters.tags.some(tag => component.tags.includes(tag));
+
+      return matchesQuery && matchesCategory && matchesDifficulty && matchesTags;
+    });
+  }, [searchQuery, filters]);
 
   return (
-    <>
-      <SearchTrigger
-        placeholder={placeholder}
-        className={className}
-        onClick={() => setIsOpen(true)}
-      />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="w-full justify-start text-muted-foreground">
+          <Search className="mr-2 h-4 w-4" />
+          Search components...
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl p-0">
+        <Command className="rounded-lg border shadow-md">
+          <div className="flex items-center border-b px-3">
+            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+            <CommandInput
+              placeholder="Search components..."
+              value={searchQuery}
+              onValueChange={handleSearch}
+              className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="ml-2"
+            >
+              <Filter className="h-4 w-4" />
+            </Button>
+          </div>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="sr-only">Search Components</DialogTitle>
-            <DialogDescription className="sr-only">
-              Search through components and documentation
-            </DialogDescription>
-          </DialogHeader>
-          
-          <SearchInput
-            value={query}
-            onChange={setQuery}
-            onKeyDown={handleKeyDown}
-            isSearching={isSearching}
-            inputRef={inputRef}
-          />
+          {showFilters && (
+            <div className="border-b p-4">
+              <SearchFilters filters={filters} onFiltersChange={setFilters} />
+            </div>
+          )}
 
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="search">Search</TabsTrigger>
-              <TabsTrigger value="recent">Recent</TabsTrigger>
-              <TabsTrigger value="favorites">Favorites</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-4 rounded-none border-b">
+              <TabsTrigger value="search" className="rounded-none">
+                <Search className="mr-2 h-4 w-4" />
+                Search
+              </TabsTrigger>
+              <TabsTrigger value="recent" className="rounded-none">
+                <Clock className="mr-2 h-4 w-4" />
+                Recent
+              </TabsTrigger>
+              <TabsTrigger value="favorites" className="rounded-none">
+                <Heart className="mr-2 h-4 w-4" />
+                Favorites
+              </TabsTrigger>
+              <TabsTrigger value="history" className="rounded-none">
+                <Star className="mr-2 h-4 w-4" />
+                History
+              </TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="search" className="mt-4">
-              <SearchFilters 
-                filters={filters}
-                onFilterToggle={handleFilterToggle}
-                onClearAll={handleClearFilters}
-              />
-              
-              <SearchResults
-                results={results}
-                selectedIndex={selectedIndex}
-                isSearching={isSearching}
-                query={query}
-                onSelect={handleSelect}
-                onNavigate={handleQuickNavigation}
-                onToggleFavorite={toggleFavorite}
-                isFavorite={isFavorite}
+
+            <TabsContent value="search" className="mt-0">
+              <CommandList className="max-h-[300px] overflow-y-auto">
+                {filteredResults.length === 0 ? (
+                  <CommandEmpty>No components found.</CommandEmpty>
+                ) : (
+                  <CommandGroup>
+                    <SearchResults 
+                      results={filteredResults}
+                      onSelect={(component) => {
+                        window.location.href = `/components/${component.id}`;
+                        onOpenChange?.(false);
+                      }}
+                      favorites={favorites}
+                      onToggleFavorite={toggleFavorite}
+                    />
+                  </CommandGroup>
+                )}
+              </CommandList>
+            </TabsContent>
+
+            <TabsContent value="recent" className="mt-0">
+              <RecentTab 
+                recentlyViewed={recentlyViewed}
+                onSelect={(component) => {
+                  window.location.href = `/components/${component.id}`;
+                  onOpenChange?.(false);
+                }}
               />
             </TabsContent>
-            
-            <TabsContent value="recent" className="mt-4">
-              <RecentTab
-                recentItems={recentItems}
-                onSelect={handleSelect}
-                onNavigate={handleQuickNavigation}
-                onToggleFavorite={toggleFavorite}
-                isFavorite={isFavorite}
-                onClearRecent={clearRecent}
-              />
-            </TabsContent>
-            
-            <TabsContent value="favorites" className="mt-4">
-              <FavoritesTab
+
+            <TabsContent value="favorites" className="mt-0">
+              <FavoritesTab 
                 favorites={favorites}
-                onSelect={handleSelect}
-                onNavigate={handleQuickNavigation}
-                onToggleFavorite={toggleFavorite}
+                onSelect={(component) => {
+                  window.location.href = `/components/${component}`;
+                  onOpenChange?.(false);
+                }}
+                onRemove={toggleFavorite}
               />
             </TabsContent>
-            
-            <TabsContent value="history" className="mt-4">
-              <HistoryTab
-                history={history}
-                onSelectQuery={setQuery}
-                onRemoveFromHistory={removeFromHistory}
-                onClearHistory={clearHistory}
+
+            <TabsContent value="history" className="mt-0">
+              <HistoryTab 
+                searchHistory={searchHistory}
+                onSelect={(query) => {
+                  setSearchQuery(query);
+                  setActiveTab('search');
+                }}
               />
             </TabsContent>
           </Tabs>
-
-          <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3">
-            <span>Use ↑↓ to navigate, Enter to select, Esc to close</span>
-            <span>Press / or Cmd+K to search</span>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </Command>
+      </DialogContent>
+    </Dialog>
   );
-}
+};

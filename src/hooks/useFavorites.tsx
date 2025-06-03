@@ -1,70 +1,44 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
-const FAVORITES_KEY = 'component-favorites';
-
-export interface FavoriteItem {
-  title: string;
-  href: string;
-  category: string;
-  addedAt: number;
-}
-
-export function useFavorites() {
-  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+export const useFavorites = () => {
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
-    const savedFavorites = localStorage.getItem(FAVORITES_KEY);
-    if (savedFavorites) {
+    const stored = localStorage.getItem('component-favorites');
+    if (stored) {
       try {
-        setFavorites(JSON.parse(savedFavorites));
+        setFavorites(JSON.parse(stored));
       } catch (error) {
         console.error('Failed to parse favorites:', error);
       }
     }
   }, []);
 
-  const addFavorite = (item: Omit<FavoriteItem, 'addedAt'>) => {
-    const newFavorite: FavoriteItem = {
-      ...item,
-      addedAt: Date.now()
-    };
-
+  const toggleFavorite = useCallback((componentId: string) => {
     setFavorites(prev => {
-      if (prev.some(fav => fav.href === newFavorite.href)) {
-        return prev; // Already in favorites
-      }
-      const newFavorites = [...prev, newFavorite];
-      localStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
-      return newFavorites;
+      const updated = prev.includes(componentId)
+        ? prev.filter(id => id !== componentId)
+        : [...prev, componentId];
+
+      localStorage.setItem('component-favorites', JSON.stringify(updated));
+      return updated;
     });
-  };
+  }, []);
 
-  const removeFavorite = (href: string) => {
-    setFavorites(prev => {
-      const newFavorites = prev.filter(fav => fav.href !== href);
-      localStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
-      return newFavorites;
-    });
-  };
+  const isFavorite = useCallback((componentId: string) => {
+    return favorites.includes(componentId);
+  }, [favorites]);
 
-  const isFavorite = (href: string) => {
-    return favorites.some(fav => fav.href === href);
-  };
-
-  const toggleFavorite = (item: Omit<FavoriteItem, 'addedAt'>) => {
-    if (isFavorite(item.href)) {
-      removeFavorite(item.href);
-    } else {
-      addFavorite(item);
-    }
-  };
+  const clearFavorites = useCallback(() => {
+    setFavorites([]);
+    localStorage.removeItem('component-favorites');
+  }, []);
 
   return {
     favorites,
-    addFavorite,
-    removeFavorite,
+    toggleFavorite,
     isFavorite,
-    toggleFavorite
+    clearFavorites
   };
-}
+};

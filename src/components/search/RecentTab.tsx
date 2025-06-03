@@ -1,72 +1,50 @@
 
 import React from 'react';
-import { Clock, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
-import { RecentlyViewedItem } from '@/hooks/useRecentlyViewed';
-import { SearchResult } from './SearchData';
-import { QuickActions } from './QuickActions';
+import { Clock } from 'lucide-react';
 
 interface RecentTabProps {
-  recentItems: RecentlyViewedItem[];
-  onSelect: (result: SearchResult) => void;
-  onNavigate: (result: SearchResult) => void;
-  onToggleFavorite: (result: SearchResult) => void;
-  isFavorite: (href: string) => boolean;
-  onClearRecent: () => void;
+  recentlyViewed: Array<{
+    id: string;
+    name: string;
+    visitedAt: Date;
+  }>;
+  onSelect: (component: any) => void;
 }
 
-export function RecentTab({
-  recentItems,
-  onSelect,
-  onNavigate,
-  onToggleFavorite,
-  isFavorite,
-  onClearRecent
-}: RecentTabProps) {
+export const RecentTab: React.FC<RecentTabProps> = ({
+  recentlyViewed,
+  onSelect
+}) => {
   return (
-    <>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Recently Viewed</span>
-        </div>
-        {recentItems.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={onClearRecent}>
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-      {recentItems.length > 0 ? (
-        <div className="max-h-80 overflow-y-auto space-y-1">
-          {recentItems.map((item) => (
-            <div
-              key={item.href}
-              className="group flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => onSelect(item)}
-            >
-              <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">{item.title}</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {item.category}
-                  </Badge>
-                </div>
-              </div>
-              <QuickActions
-                result={item}
-                onNavigate={onNavigate}
-                onAddToFavorites={() => onToggleFavorite(item)}
-                isFavorite={isFavorite(item.href)}
-              />
-            </div>
-          ))}
-        </div>
+    <CommandList className="max-h-[300px] overflow-y-auto">
+      {recentlyViewed.length === 0 ? (
+        <CommandEmpty>
+          <div className="flex flex-col items-center justify-center py-6">
+            <Clock className="h-8 w-8 text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground">No recently viewed components</p>
+          </div>
+        </CommandEmpty>
       ) : (
-        <div className="py-6 text-center text-sm text-muted-foreground">
-          No recently viewed components
-        </div>
+        <CommandGroup heading="Recently Viewed">
+          {recentlyViewed.map((component) => (
+            <CommandItem
+              key={component.id}
+              value={component.name}
+              onSelect={() => onSelect(component)}
+              className="flex items-center justify-between p-3"
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{component.name}</span>
+                <Badge variant="outline" className="text-xs">
+                  {new Date(component.visitedAt).toLocaleDateString()}
+                </Badge>
+              </div>
+            </CommandItem>
+          ))}
+        </CommandGroup>
       )}
-    </>
+    </CommandList>
   );
-}
+};

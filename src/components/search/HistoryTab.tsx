@@ -1,72 +1,53 @@
 
 import React from 'react';
-import { History, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
-import { SearchHistoryItem } from '@/hooks/useSearchHistory';
+import { History } from 'lucide-react';
 
 interface HistoryTabProps {
-  history: SearchHistoryItem[];
-  onSelectQuery: (query: string) => void;
-  onRemoveFromHistory: (query: string) => void;
-  onClearHistory: () => void;
+  searchHistory: Array<{
+    term: string;
+    count: number;
+    lastSearched: Date;
+  }>;
+  onSelect: (query: string) => void;
 }
 
-export function HistoryTab({
-  history,
-  onSelectQuery,
-  onRemoveFromHistory,
-  onClearHistory
-}: HistoryTabProps) {
+export const HistoryTab: React.FC<HistoryTabProps> = ({
+  searchHistory,
+  onSelect
+}) => {
   return (
-    <>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <History className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Search History</span>
-        </div>
-        {history.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={onClearHistory}>
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-      {history.length > 0 ? (
-        <div className="max-h-80 overflow-y-auto space-y-1">
-          {history.map((item, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => onSelectQuery(item.query)}
-            >
-              <div className="flex items-center space-x-2">
-                <History className="h-3 w-3 text-muted-foreground" />
-                <span className="text-sm">{item.query}</span>
-                {item.category && (
-                  <Badge variant="outline" className="text-xs">
-                    {item.category}
-                  </Badge>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemoveFromHistory(item.query);
-                }}
-                className="h-6 w-6 p-0"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
+    <CommandList className="max-h-[300px] overflow-y-auto">
+      {searchHistory.length === 0 ? (
+        <CommandEmpty>
+          <div className="flex flex-col items-center justify-center py-6">
+            <History className="h-8 w-8 text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground">No search history</p>
+          </div>
+        </CommandEmpty>
       ) : (
-        <div className="py-6 text-center text-sm text-muted-foreground">
-          No search history yet
-        </div>
+        <CommandGroup heading="Search History">
+          {searchHistory.map((item, index) => (
+            <CommandItem
+              key={index}
+              value={item.term}
+              onSelect={() => onSelect(item.term)}
+              className="flex items-center justify-between p-3"
+            >
+              <span className="font-medium">{item.term}</span>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  {item.count} searches
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(item.lastSearched).toLocaleDateString()}
+                </span>
+              </div>
+            </CommandItem>
+          ))}
+        </CommandGroup>
       )}
-    </>
+    </CommandList>
   );
-}
+};

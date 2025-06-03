@@ -1,70 +1,51 @@
 
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
 
-const RECENTLY_VIEWED_KEY = 'recently-viewed-components';
-const MAX_RECENT_ITEMS = 8;
-
-export interface RecentlyViewedItem {
-  title: string;
-  href: string;
-  category: string;
-  timestamp: number;
+interface RecentlyViewedItem {
+  id: string;
+  name: string;
+  visitedAt: Date;
 }
 
-export function useRecentlyViewed() {
-  const [recentItems, setRecentItems] = useState<RecentlyViewedItem[]>([]);
-  const location = useLocation();
+export const useRecentlyViewed = () => {
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([]);
 
   useEffect(() => {
-    const savedItems = localStorage.getItem(RECENTLY_VIEWED_KEY);
-    if (savedItems) {
+    const stored = localStorage.getItem('component-recently-viewed');
+    if (stored) {
       try {
-        setRecentItems(JSON.parse(savedItems));
+        const parsed = JSON.parse(stored);
+        setRecentlyViewed(parsed.map((item: any) => ({
+          ...item,
+          visitedAt: new Date(item.visitedAt)
+        })));
       } catch (error) {
-        console.error('Failed to parse recently viewed items:', error);
+        console.error('Failed to parse recently viewed:', error);
       }
     }
   }, []);
 
-  useEffect(() => {
-    const path = location.pathname;
-    
-    // Only track component pages
-    if (path.startsWith('/components/')) {
-      const componentName = path.split('/components/')[1];
-      if (componentName) {
-        addRecentItem({
-          title: componentName.charAt(0).toUpperCase() + componentName.slice(1),
-          href: path,
-          category: 'Components'
-        });
-      }
-    }
-  }, [location.pathname]);
+  const addRecentlyViewed = useCallback((componentId: string, componentName: string) => {
+    setRecentlyViewed(prev => {
+      const filtered = prev.filter(item => item.id !== componentId);
+      const updated = [
+        { id: componentId, name: componentName, visitedAt: new Date() },
+        ...filtered
+      ].slice(0, 20); // Keep only 20 most recent
 
-  const addRecentItem = (item: Omit<RecentlyViewedItem, 'timestamp'>) => {
-    const newItem: RecentlyViewedItem = {
-      ...item,
-      timestamp: Date.now()
-    };
-
-    setRecentItems(prev => {
-      const filtered = prev.filter(existing => existing.href !== newItem.href);
-      const newItems = [newItem, ...filtered].slice(0, MAX_RECENT_ITEMS);
-      localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(newItems));
-      return newItems;
+      localStorage.setItem('component-recently-viewed', JSON.stringify(updated));
+      return updated;
     });
-  };
+  }, []);
 
-  const clearRecent = () => {
-    setRecentItems([]);
-    localStorage.removeItem(RECENTLY_VIEWED_KEY);
-  };
+  const clearRecentlyViewed = useCallback(() => {
+    setRecentlyViewed([]);
+    localStorage.removeItem('component-recently-viewed');
+  }, []);
 
   return {
-    recentItems,
-    addRecentItem,
-    clearRecent
+    recentlyViewed,
+    addRecentlyViewed,
+    clearRecentlyViewed
   };
-}
+};

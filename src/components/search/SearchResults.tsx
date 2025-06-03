@@ -1,84 +1,75 @@
 
 import React from 'react';
-import { Heart } from 'lucide-react';
+import { CommandItem } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
-import { SearchResultsSkeleton } from '@/components/ui/skeleton-loaders';
-import { SearchResult } from './SearchData';
-import { QuickActions } from './QuickActions';
+import { Button } from '@/components/ui/button';
+import { Heart } from 'lucide-react';
 
 interface SearchResultsProps {
-  results: SearchResult[];
-  selectedIndex: number;
-  isSearching: boolean;
-  query: string;
-  onSelect: (result: SearchResult) => void;
-  onNavigate: (result: SearchResult) => void;
-  onToggleFavorite: (result: SearchResult) => void;
-  isFavorite: (href: string) => boolean;
+  results: Array<{
+    id: string;
+    name: string;
+    category: string;
+    difficulty: string;
+    tags: string[];
+  }>;
+  onSelect: (component: any) => void;
+  favorites: string[];
+  onToggleFavorite: (id: string) => void;
 }
 
-export function SearchResults({
+export const SearchResults: React.FC<SearchResultsProps> = ({
   results,
-  selectedIndex,
-  isSearching,
-  query,
   onSelect,
-  onNavigate,
-  onToggleFavorite,
-  isFavorite
-}: SearchResultsProps) {
-  if (isSearching) {
-    return <SearchResultsSkeleton />;
-  }
-
-  if (results.length > 0) {
-    return (
-      <div className="max-h-80 overflow-y-auto">
-        {results.map((result, index) => (
-          <div
-            key={result.href}
-            className={`group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-              index === selectedIndex 
-                ? 'bg-accent text-accent-foreground' 
-                : 'hover:bg-muted/50'
-            }`}
-            onClick={() => onSelect(result)}
-          >
-            <div className="flex-1">
-              <div className="flex items-center space-x-2">
-                <span className="font-medium">{result.title}</span>
-                <Badge variant="secondary" className="text-xs">
-                  {result.category}
-                </Badge>
-                {isFavorite(result.href) && (
-                  <Heart className="h-3 w-3 fill-current text-red-500" />
-                )}
-              </div>
-              {result.description && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  {result.description}
-                </p>
-              )}
+  favorites,
+  onToggleFavorite
+}) => {
+  return (
+    <>
+      {results.map((component) => (
+        <CommandItem
+          key={component.id}
+          value={component.name}
+          onSelect={() => onSelect(component)}
+          className="flex items-center justify-between p-3"
+        >
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{component.name}</span>
+              <Badge variant="outline" className="text-xs">
+                {component.category}
+              </Badge>
+              <Badge 
+                variant={component.difficulty === 'Easy' ? 'default' : 
+                        component.difficulty === 'Medium' ? 'secondary' : 'destructive'} 
+                className="text-xs"
+              >
+                {component.difficulty}
+              </Badge>
             </div>
-            <QuickActions
-              result={result}
-              onNavigate={onNavigate}
-              onAddToFavorites={() => onToggleFavorite(result)}
-              isFavorite={isFavorite(result.href)}
-            />
+            <div className="mt-1 flex flex-wrap gap-1">
+              {component.tags.map(tag => (
+                <span key={tag} className="text-xs text-muted-foreground">
+                  #{tag}
+                </span>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (query && !isSearching) {
-    return (
-      <div className="py-6 text-center text-sm text-muted-foreground">
-        No results found for "{query}"
-      </div>
-    );
-  }
-
-  return null;
-}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite(component.id);
+            }}
+            className="ml-2"
+          >
+            <Heart 
+              className={`h-4 w-4 ${favorites.includes(component.id) ? 'fill-current text-red-500' : ''}`} 
+            />
+          </Button>
+        </CommandItem>
+      ))}
+    </>
+  );
+};

@@ -1,63 +1,55 @@
 
 import React from 'react';
-import { Heart } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { FavoriteItem } from '@/hooks/useFavorites';
-import { SearchResult } from './SearchData';
-import { QuickActions } from './QuickActions';
+import { CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
+import { Button } from '@/components/ui/button';
+import { Heart, X } from 'lucide-react';
 
 interface FavoritesTabProps {
-  favorites: FavoriteItem[];
-  onSelect: (result: SearchResult) => void;
-  onNavigate: (result: SearchResult) => void;
-  onToggleFavorite: (result: SearchResult) => void;
+  favorites: string[];
+  onSelect: (component: string) => void;
+  onRemove: (id: string) => void;
 }
 
-export function FavoritesTab({
+export const FavoritesTab: React.FC<FavoritesTabProps> = ({
   favorites,
   onSelect,
-  onNavigate,
-  onToggleFavorite
-}: FavoritesTabProps) {
+  onRemove
+}) => {
   return (
-    <>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <Heart className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Favorites</span>
-        </div>
-      </div>
-      {favorites.length > 0 ? (
-        <div className="max-h-80 overflow-y-auto space-y-1">
-          {favorites.map((item) => (
-            <div
-              key={item.href}
-              className="group flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => onSelect(item)}
-            >
-              <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">{item.title}</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {item.category}
-                  </Badge>
-                  <Heart className="h-3 w-3 fill-current text-red-500" />
-                </div>
-              </div>
-              <QuickActions
-                result={item}
-                onNavigate={onNavigate}
-                onAddToFavorites={() => onToggleFavorite(item)}
-                isFavorite={true}
-              />
-            </div>
-          ))}
-        </div>
+    <CommandList className="max-h-[300px] overflow-y-auto">
+      {favorites.length === 0 ? (
+        <CommandEmpty>
+          <div className="flex flex-col items-center justify-center py-6">
+            <Heart className="h-8 w-8 text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground">No favorite components yet</p>
+            <p className="text-xs text-muted-foreground mt-1">Click the heart icon to add favorites</p>
+          </div>
+        </CommandEmpty>
       ) : (
-        <div className="py-6 text-center text-sm text-muted-foreground">
-          No favorite components yet
-        </div>
+        <CommandGroup heading="Favorite Components">
+          {favorites.map((componentId) => (
+            <CommandItem
+              key={componentId}
+              value={componentId}
+              onSelect={() => onSelect(componentId)}
+              className="flex items-center justify-between p-3"
+            >
+              <span className="font-medium capitalize">{componentId}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(componentId);
+                }}
+                className="ml-2"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CommandItem>
+          ))}
+        </CommandGroup>
       )}
-    </>
+    </CommandList>
   );
-}
+};

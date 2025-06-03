@@ -1,63 +1,64 @@
+import { useState, useCallback, useEffect } from 'react';
 
-import { useState, useEffect } from 'react';
-
-const SEARCH_HISTORY_KEY = 'component-search-history';
-const MAX_HISTORY_ITEMS = 10;
-
-export interface SearchHistoryItem {
-  query: string;
-  timestamp: number;
-  category?: string;
+interface SearchHistoryItem {
+  term: string;
+  count: number;
+  lastSearched: Date;
 }
 
-export function useSearchHistory() {
-  const [history, setHistory] = useState<SearchHistoryItem[]>([]);
+export const useSearchHistory = () => {
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
 
   useEffect(() => {
-    const savedHistory = localStorage.getItem(SEARCH_HISTORY_KEY);
-    if (savedHistory) {
+    const stored = localStorage.getItem('component-search-history');
+    if (stored) {
       try {
-        setHistory(JSON.parse(savedHistory));
+        const parsed = JSON.parse(stored);
+        setSearchHistory(parsed.map((item: any) => ({
+          ...item,
+          lastSearched: new Date(item.lastSearched)
+        })));
       } catch (error) {
         console.error('Failed to parse search history:', error);
       }
     }
   }, []);
 
-  const addToHistory = (query: string, category?: string) => {
-    if (!query.trim()) return;
+  const addSearchTerm = useCallback((term: string) => {
+    if (!term.trim()) return;
 
-    const newItem: SearchHistoryItem = {
-      query: query.trim(),
-      timestamp: Date.now(),
-      category
-    };
+    setSearchHistory(prev => {
+      const existing = prev.find(item => item.term.toLowerCase() === term.toLowerCase());
+      let updated;
 
-    setHistory(prev => {
-      const filtered = prev.filter(item => item.query !== newItem.query);
-      const newHistory = [newItem, ...filtered].slice(0, MAX_HISTORY_ITEMS);
-      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory));
-      return newHistory;
+      if (existing) {
+        updated = prev.map(item =>
+          item.term.toLowerCase() === term.toLowerCase()
+            ? { ...item, count: item.count + 1, lastSearched: new Date() }
+            : item
+        );
+      } else {
+        updated = [...prev, { term, count: 1, lastSearched: new Date() }];
+      }
+
+      // Keep only the most recent 50 searches
+      const sorted = updated
+        .sort((a, b) => b.lastSearched.getTime() - a.lastSearched.getTime())
+        .slice(0, 50);
+
+      localStorage.setItem('component-search-history', JSON.stringify(sorted));
+      return sorted;
     });
-  };
+  }, []);
 
-  const clearHistory = () => {
-    setHistory([]);
-    localStorage.removeItem(SEARCH_HISTORY_KEY);
-  };
-
-  const removeFromHistory = (query: string) => {
-    setHistory(prev => {
-      const newHistory = prev.filter(item => item.query !== query);
-      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory));
-      return newHistory;
-    });
-  };
+  const clearHistory = useCallback(() => {
+    setSearchHistory([]);
+    localStorage.removeItem('component-search-history');
+  }, []);
 
   return {
-    history,
-    addToHistory,
-    clearHistory,
-    removeFromHistory
+    searchHistory,
+    addSearchTerm,
+    clearHistory
   };
-}
+};
