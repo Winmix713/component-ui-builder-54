@@ -7,8 +7,10 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "0.0.0.0",
     port: 8080,
-    allowedHosts: "all",
+    origin:
+      "https://5e39192a-52a5-49ad-b1c8-068b09a59974-00-pmuy4cj9guxu.riker.replit.dev",
     hmr: {
+      protocol: "wss",
       clientPort: 443,
     },
   },
