@@ -28,7 +28,6 @@ const queryClient = new QueryClient({
 
 const AppContent = () => {
   useWebVitals();
-  usePageAnalytics();
   const { isInstallable, installApp } = usePWA();
 
   return (
@@ -47,22 +46,30 @@ const AppContent = () => {
         </div>
       )}
       <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<LazyOverview />} />
-            <Route path="/installation" element={<LazyDocsPage />} />
-            <Route path="/theming" element={<LazyDocsPage />} />
-            <Route path="/typography" element={<LazyDocsPage />} />
-            <Route path="/components/:component" element={<LazyComponentPage />} />
-            <Route path="/activity" element={<LazyDocsPage />} />
-            <Route path="/settings" element={<LazyDocsPage />} />
-            <Route path="/collaborators" element={<LazyDocsPage />} />
-            <Route path="/notifications" element={<LazyDocsPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
+        <RouterContent />
       </BrowserRouter>
     </>
+  );
+};
+
+const RouterContent = () => {
+  usePageAnalytics();
+
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<LazyOverview />} />
+        <Route path="/installation" element={<LazyDocsPage />} />
+        <Route path="/theming" element={<LazyDocsPage />} />
+        <Route path="/typography" element={<LazyDocsPage />} />
+        <Route path="/components/:component" element={<LazyComponentPage />} />
+        <Route path="/activity" element={<LazyDocsPage />} />
+        <Route path="/settings" element={<LazyDocsPage />} />
+        <Route path="/collaborators" element={<LazyDocsPage />} />
+        <Route path="/notifications" element={<LazyDocsPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Layout>
   );
 };
 
