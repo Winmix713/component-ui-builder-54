@@ -18,13 +18,13 @@ const navigationItems = [
 
 export const TopNavigation: React.FC<TopNavigationProps> = ({ onMenuClick }) => {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 w-full border-b border-border/20 glass-card backdrop-blur-md">
       <div className="flex h-14 items-center px-6">
         <Button
           variant="ghost"
           size="sm"
           onClick={onMenuClick}
-          className="lg:hidden mr-2"
+          className="lg:hidden mr-2 hover:bg-white/10"
         >
           <Menu className="h-4 w-4" />
         </Button>
@@ -32,7 +32,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ onMenuClick }) => 
         <nav className="flex items-center space-x-6 text-sm font-medium">
           {navigationItems.map((item) => (
             <Link key={item.href} to={item.href}>
-              <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+              <span className="text-muted-foreground hover:text-primary transition-colors cursor-pointer hover:glow-text">
                 {item.title}
               </span>
             </Link>
@@ -41,7 +41,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ onMenuClick }) => 
 
         <div className="ml-auto flex items-center space-x-4">
           <span className="text-sm text-muted-foreground">View feedback</span>
-          <Button>
+          <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
             <Copy className="h-4 w-4 mr-2" />
             Copy
           </Button>

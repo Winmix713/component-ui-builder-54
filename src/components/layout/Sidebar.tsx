@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
@@ -94,23 +93,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const isActiveLink = (href: string) => location.pathname === href;
 
   return (
-    <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-card border-r border-border transition-transform duration-200 ease-in-out ${
+    <aside className={`fixed inset-y-0 left-0 z-50 w-72 glass-card border-r border-border/20 transition-transform duration-200 ease-in-out ${
       isOpen ? 'translate-x-0' : '-translate-x-full'
     } lg:translate-x-0`}>
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-6 border-b border-border/20">
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center text-primary-foreground text-sm font-bold">
+            <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center text-primary-foreground text-sm font-bold glow-text">
               C
             </div>
-            <span className="text-lg font-semibold">Components</span>
+            <span className="text-lg font-semibold gradient-text">Components</span>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="lg:hidden"
+            className="lg:hidden hover:bg-white/10"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -121,7 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="pl-9"
+              className="pl-9 bg-white/5 border-white/10 focus:border-primary/50 backdrop-blur-sm"
               placeholder="Search components..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -140,10 +139,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 {section.items.map((item) => (
                   <li key={item.href}>
                     <Link to={item.href}>
-                      <span className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors cursor-pointer ${
+                      <span className={`flex items-center px-3 py-2 text-sm rounded-md transition-all duration-200 cursor-pointer ${
                         isActiveLink(item.href)
-                          ? 'bg-accent text-accent-foreground font-medium'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                          ? 'bg-primary/20 text-primary font-medium border border-primary/30 shadow-lg shadow-primary/20'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
                       }`}>
                         {item.title}
                       </span>

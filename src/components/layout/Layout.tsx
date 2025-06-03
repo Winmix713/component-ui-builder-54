@@ -19,10 +19,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative">
+      {/* Blue Grid Background */}
+      <div className="grid-background" />
+      
       <TopNavigation onMenuClick={handleMenuClick} />
       
-      <div className="flex">
+      <div className="flex relative z-10">
         <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
         
         {/* Overlay for mobile */}
@@ -34,7 +37,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         )}
         
         {/* Main content */}
-        <main className="flex-1 lg:ml-72">
+        <main className="flex-1 lg:ml-72 relative">
           <div className="p-6">
             {children}
           </div>
