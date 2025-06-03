@@ -10,13 +10,16 @@ import {
 } from '@/components/ui/breadcrumb';
 import { useBreadcrumbs } from '@/hooks/useBreadcrumbs';
 
-export function BreadcrumbNavigation() {
+export function BreadcrumbNavigation(props: React.HTMLAttributes<HTMLElement>) {
   const breadcrumbs = useBreadcrumbs();
 
   if (breadcrumbs.length <= 1) return null;
 
+  // Extract data-lov-id and other props that shouldn't be passed to Fragment
+  const { 'data-lov-id': dataLovId, ...restProps } = props;
+
   return (
-    <Breadcrumb className="mb-6">
+    <Breadcrumb className="mb-6" {...restProps}>
       <BreadcrumbList>
         {breadcrumbs.map((item, index) => (
           <React.Fragment key={`breadcrumb-${index}-${item.label}`}>
