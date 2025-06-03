@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Separator } from '@/components/ui/separator';
 import { Copy, Check, ChevronLeft, ChevronRight, Heart, MessageCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { ComponentPlayground } from '@/components/playground/ComponentPlayground';
 
 // Component metadata
 const componentData = {
@@ -197,10 +197,26 @@ export const ComponentPage: React.FC = () => {
         <CodeBlock code={data.imports} />
       </section>
 
-      {/* Preview Section */}
+      {/* Interactive Playground Section */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Preview</h2>
+          <h2 className="text-xl font-semibold">Interactive Playground</h2>
+          <Badge variant="secondary" className="glass-card">
+            Live Demo
+          </Badge>
+        </div>
+        
+        <ComponentPlayground
+          componentType={component}
+          initialCode={data.example}
+          title={data.title}
+        />
+      </section>
+
+      {/* Static Preview Section */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Static Preview</h2>
           <Badge variant="secondary" className="glass-card">
             {data.title}
           </Badge>
