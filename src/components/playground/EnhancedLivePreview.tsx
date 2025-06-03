@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,8 +55,6 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
         'Badge',
         'Input',
         'Checkbox',
-        'useState',
-        'useEffect',
         `
         const { useState, useEffect } = React;
         ${code}
@@ -69,9 +68,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
         Button,
         Badge,
         Input,
-        Checkbox,
-        React.useState,
-        React.useEffect
+        Checkbox
       );
 
       const endTime = performance.now();
