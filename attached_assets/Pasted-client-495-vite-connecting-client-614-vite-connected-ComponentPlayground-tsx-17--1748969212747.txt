@@ -1,0 +1,50 @@
+client:495 [vite] connecting...
+client:614 [vite] connected.
+ComponentPlayground.tsx:17 
+            
+            
+           GET https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/src/hooks/usePlaygroundLogic.tsx net::ERR_ABORTED 500 (Internal Server Error)
+chunk-3TFVT2CW.js?v=5322cf11:903 Uncaught TypeError: Failed to fetch dynamically imported module: https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/src/pages/ComponentPage.tsx
+chunk-3TFVT2CW.js?v=5322cf11:903 Uncaught TypeError: Failed to fetch dynamically imported module: https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/src/pages/ComponentPage.tsx
+hook.js:608 The above error occurred in one of your React components:
+
+    at Lazy
+    at Suspense
+    at RenderedRoute (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=5322cf11:4092:5)
+    at Routes (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=5322cf11:4531:5)
+    at div
+    at main
+    at div
+    at div
+    at Layout (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/src/components/layout/Layout.tsx:15:26)
+    at RouterContent (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/src/App.tsx:149:5)
+    at Router (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=5322cf11:4474:15)
+    at BrowserRouter (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/node_modules/.vite/deps/react-router-dom.js?v=5322cf11:5219:5)
+    at AppContent (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/src/App.tsx:38:5)
+    at Provider2 (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=5322cf11:60:15)
+    at TooltipProvider (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=5322cf11:251:5)
+    at AccessibilityProvider (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/src/components/accessibility/AccessibilityProvider.tsx:22:41)
+    at ThemeProvider (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/src/components/theme/ThemeProvider.tsx:17:33)
+    at AnalyticsProvider (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/src/components/analytics/AnalyticsProvider.tsx:13:37)
+    at QueryClientProvider (https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/node_modules/.vite/deps/@tanstack_react-query.js?v=5322cf11:2726:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+overrideMethod @ hook.js:608
+logCapturedError @ chunk-WERSD76P.js?v=5322cf11:14032
+update.callback @ chunk-WERSD76P.js?v=5322cf11:14052
+callCallback @ chunk-WERSD76P.js?v=5322cf11:11248
+commitUpdateQueue @ chunk-WERSD76P.js?v=5322cf11:11265
+commitLayoutEffectOnFiber @ chunk-WERSD76P.js?v=5322cf11:17093
+commitLayoutMountEffects_complete @ chunk-WERSD76P.js?v=5322cf11:17980
+commitLayoutEffects_begin @ chunk-WERSD76P.js?v=5322cf11:17969
+commitLayoutEffects @ chunk-WERSD76P.js?v=5322cf11:17920
+commitRootImpl @ chunk-WERSD76P.js?v=5322cf11:19353
+commitRoot @ chunk-WERSD76P.js?v=5322cf11:19277
+finishConcurrentRender @ chunk-WERSD76P.js?v=5322cf11:18760
+performConcurrentWorkOnRoot @ chunk-WERSD76P.js?v=5322cf11:18718
+workLoop @ chunk-WERSD76P.js?v=5322cf11:197
+flushWork @ chunk-WERSD76P.js?v=5322cf11:176
+performWorkUntilDeadline @ chunk-WERSD76P.js?v=5322cf11:384
+chunk-WERSD76P.js?v=5322cf11:19413 Uncaught TypeError: Failed to fetch dynamically imported module: https://1afe385b-5516-4e63-b60c-8e662317f5e9-00-3itn962l3mnq2.spock.replit.dev/src/pages/ComponentPage.tsx
