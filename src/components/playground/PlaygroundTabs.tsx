@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LazyCodeEditor } from './LazyCodeEditor';
@@ -58,23 +57,23 @@ export const PlaygroundTabs: React.FC<PlaygroundTabsProps> = React.memo(({
       switch (e.key) {
         case '1':
           e.preventDefault();
-          document.querySelector('[data-tab="preview"]')?.click();
+          (document.querySelector('[data-tab="preview"]') as HTMLElement)?.click();
           break;
         case '2':
           e.preventDefault();
-          document.querySelector('[data-tab="code"]')?.click();
+          (document.querySelector('[data-tab="code"]') as HTMLElement)?.click();
           break;
         case '3':
           e.preventDefault();
-          document.querySelector('[data-tab="props"]')?.click();
+          (document.querySelector('[data-tab="props"]') as HTMLElement)?.click();
           break;
         case '4':
           e.preventDefault();
-          document.querySelector('[data-tab="variations"]')?.click();
+          (document.querySelector('[data-tab="variations"]') as HTMLElement)?.click();
           break;
         case '5':
           e.preventDefault();
-          document.querySelector('[data-tab="responsive"]')?.click();
+          (document.querySelector('[data-tab="responsive"]') as HTMLElement)?.click();
           break;
       }
     }
