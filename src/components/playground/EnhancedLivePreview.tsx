@@ -6,7 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Palette } from 'lucide-react';
+import { ThemeBrowser } from './ThemeBrowser';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface EnhancedLivePreviewProps {
   code: string;
@@ -23,6 +25,7 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
 }) => {
   const [error, setError] = useState<Error | null>(null);
   const [renderCount, setRenderCount] = useState(0);
+  const [showThemeBrowser, setShowThemeBrowser] = useState(false);
 
   const handleRenderError = useCallback((error: Error) => {
     setError(error);
@@ -38,7 +41,6 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
         .replace(/^export\s+default\s+/m, '')
         .replace(/^export\s+/m, '');
 
-      // Create a function that returns the component with React hooks available
       const createComponent = new Function(
         'React',
         'Card', 'CardContent', 'CardHeader', 'CardTitle', 'CardDescription',
@@ -47,7 +49,6 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
         'Input',
         'Checkbox',
         `
-        // Destructure React hooks to avoid redeclaration
         const { useState, useEffect, useMemo, useCallback } = React;
         ${cleanedCode}
         return ComponentDemo;
@@ -110,14 +111,38 @@ export const EnhancedLivePreview: React.FC<EnhancedLivePreviewProps> = React.mem
           )}
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowThemeBrowser(!showThemeBrowser)}
+            className="flex items-center gap-2"
+          >
+            <Palette className="h-4 w-4" />
+            Themes
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
+
+      {showThemeBrowser && (
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="theme-browser">
+            <AccordionTrigger className="text-sm">
+              Theme Variations
+            </AccordionTrigger>
+            <AccordionContent>
+              <ThemeBrowser />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      )}
 
       <div className="p-8 border rounded-md bg-muted/20 backdrop-blur-sm flex items-center justify-center min-h-[200px]">
         {renderedComponent}

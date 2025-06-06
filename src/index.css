@@ -1,72 +1,10 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    /* Light theme colors */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 213 100% 54%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 213 100% 54%;
-
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    /* Dark theme colors (existing) */
-    --background: 5 20% 3%;
-    --foreground: 210 40% 98%;
-
-    --card: 5 20% 4%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 5 20% 4%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 213 100% 54%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 217 32% 17%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 32% 8%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 217 32% 17%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 32% 15%;
-    --input: 217 32% 15%;
-    --ring: 213 100% 54%;
-  }
-}
+/* Import generated theme variables */
+@import './theme-generated.css';
 
 @layer base {
   * {
@@ -78,10 +16,11 @@
     margin: 0;
     padding: 0;
     min-height: 100vh;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-/* Blue Grid Background */
+/* Enhanced Grid Background using design tokens */
 .grid-background {
   position: fixed;
   top: 0;
@@ -140,7 +79,7 @@
   -webkit-mask-position: center center;
 }
 
-/* Glass morphism effects */
+/* Glass morphism effects using design tokens */
 .glass-card {
   background: hsl(var(--background) / 0.05);
   backdrop-filter: blur(10px);
@@ -158,31 +97,10 @@
   background-clip: text;
 }
 
-/* Code syntax highlighting */
-.syntax-highlight {
-  color: #e1e4e8;
-}
-
-.syntax-highlight .keyword {
-  color: #f97583;
-}
-
-.syntax-highlight .string {
-  color: #9ecbff;
-}
-
-.syntax-highlight .comment {
-  color: #6a737d;
-}
-
-.syntax-highlight .function {
-  color: #b392f0;
-}
-
-/* Custom scrollbar for sidebar */
+/* Enhanced scrollbar using design tokens */
 .sidebar-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(20, 60, 255, 0.3) transparent;
+  scrollbar-color: hsl(var(--primary) / 0.3) transparent;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar {
@@ -194,22 +112,22 @@
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(20, 60, 255, 0.3);
-  border-radius: 3px;
+  background-color: hsl(var(--primary) / 0.3);
+  border-radius: var(--radius-sm);
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(20, 60, 255, 0.5);
+  background-color: hsl(var(--primary) / 0.5);
 }
 
-/* Enhanced table styling */
+/* Enhanced table styling using design tokens */
 .table-container {
-  border-radius: 0.5rem;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid hsl(var(--border));
 }
 
-/* Copy button animations */
+/* Copy button animations using design tokens */
 @keyframes copy-success {
   0% { transform: scale(1); }
   50% { transform: scale(1.1); }
@@ -217,17 +135,18 @@
 }
 
 .copy-success {
-  animation: copy-success 0.3s ease-in-out;
+  animation: copy-success var(--duration-normal) ease-in-out;
 }
 
-/* Enhanced focus states */
+/* Enhanced focus states using design tokens */
 .focus-ring {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
 
-/* Smooth transitions for all interactive elements */
+/* Smooth transitions using design tokens */
 * {
-  transition: all 0.2s ease-in-out;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: ease-in-out;
 }
 
 /* Code block enhancements */
@@ -235,10 +154,39 @@ pre {
   position: relative;
   overflow-x: auto;
   white-space: pre;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
 }
 
 pre code {
   display: block;
   min-width: 100%;
   width: max-content;
+  color: hsl(var(--foreground));
 }
+
+/* Utility classes using design tokens */
+.container-token {
+  max-width: var(--spacing-96);
+  margin: 0 auto;
+  padding: 0 var(--spacing-4);
+}
+
+.text-token-xs { font-size: var(--font-size-xs); }
+.text-token-sm { font-size: var(--font-size-sm); }
+.text-token-base { font-size: var(--font-size-base); }
+.text-token-lg { font-size: var(--font-size-lg); }
+.text-token-xl { font-size: var(--font-size-xl); }
+.text-token-2xl { font-size: var(--font-size-2xl); }
+
+.shadow-token-sm { box-shadow: var(--shadow-sm); }
+.shadow-token { box-shadow: var(--shadow-base); }
+.shadow-token-md { box-shadow: var(--shadow-md); }
+.shadow-token-lg { box-shadow: var(--shadow-lg); }
+.shadow-token-xl { box-shadow: var(--shadow-xl); }
+
+.rounded-token-sm { border-radius: var(--radius-sm); }
+.rounded-token { border-radius: var(--radius-md); }
+.rounded-token-lg { border-radius: var(--radius-lg); }
+.rounded-token-xl { border-radius: var(--radius-xl); }
